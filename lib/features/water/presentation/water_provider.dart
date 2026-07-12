@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hive/hive.dart';
@@ -20,6 +21,8 @@ class WaterProvider extends ChangeNotifier {
   final WaterRepository _repository;
   final ProfileLocalDataSource _profileDataSource;
 
+  StreamSubscription? _remindersBoxSub;
+
   String? _lastError;
   String? get lastError => _lastError;
 
@@ -36,7 +39,7 @@ class WaterProvider extends ChangeNotifier {
     
     try {
       final box = Hive.box<ReminderModel>('reminders_box');
-      box.watch().listen((_) {
+      _remindersBoxSub = box.watch().listen((_) {
         _loadReminderPreferencesCached();
         notifyListeners();
       });
@@ -377,6 +380,12 @@ class WaterProvider extends ChangeNotifier {
       await _profileDataSource.saveProfile(profile);
       _loadData();
     }
+  }
+
+  @override
+  void dispose() {
+    _remindersBoxSub?.cancel();
+    super.dispose();
   }
 }
 
