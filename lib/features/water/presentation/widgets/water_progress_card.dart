@@ -33,10 +33,7 @@ class WaterProgressCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppColors.water,
-            AppColors.water.withValues(alpha: 0.8),
-          ],
+          colors: [AppColors.water, AppColors.water.withValues(alpha: 0.8)],
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
@@ -54,10 +51,7 @@ class WaterProgressCard extends StatelessWidget {
             progress: progress.clamp(0.0, 1.0),
             size: 150,
             strokeWidth: 10,
-            gradientColors: const [
-              Colors.white,
-              Color(0x88FFFFFF),
-            ],
+            gradientColors: const [Colors.white, Color(0x88FFFFFF)],
             trackColor: Colors.white.withValues(alpha: 0.15),
             child: WaveProgress(
               progress: progress.clamp(0.0, 1.0),
@@ -91,10 +85,7 @@ class WaterProgressCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _StatColumn(
-                label: 'Progress',
-                value: '$progressPercent%',
-              ),
+              _StatColumn(label: 'Progress', value: '$progressPercent%'),
               Container(
                 width: 1,
                 height: 32,
@@ -196,12 +187,16 @@ class _WaveProgressState extends State<WaveProgress>
   void didUpdateWidget(covariant WaveProgress oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.progress != widget.progress) {
-      _levelAnimation = Tween<double>(
-        begin: _levelAnimation.value,
-        end: widget.progress,
-      ).animate(
-        CurvedAnimation(parent: _levelController, curve: Curves.easeOutCubic),
-      );
+      _levelAnimation =
+          Tween<double>(
+            begin: _levelAnimation.value,
+            end: widget.progress,
+          ).animate(
+            CurvedAnimation(
+              parent: _levelController,
+              curve: Curves.easeOutCubic,
+            ),
+          );
       _levelController.reset();
       _levelController.forward();
     }
@@ -220,9 +215,9 @@ class _WaveProgressState extends State<WaveProgress>
       width: widget.size,
       height: widget.size,
       clipBehavior: Clip.antiAlias,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.transparent,
+        color: Colors.white.withValues(alpha: 0.08),
       ),
       child: AnimatedBuilder(
         animation: Listenable.merge([_waveController, _levelAnimation]),
@@ -250,29 +245,50 @@ class _WavePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.15)
-      ..style = PaintingStyle.fill;
-
-    final path = Path();
+    // Amplitude smooth-scaling to 0 at empty (0.0) or full (1.0) bounds to prevent overflow clipping gaps
+    final amplitude = 6.0 * math.sin(progress * math.pi);
     final yCenter = size.height * (1.0 - progress);
 
-    path.moveTo(0, size.height);
-    path.lineTo(0, yCenter);
+    // 1. Background Wave (different phase/amplitude, lower opacity)
+    final paintBg = Paint()
+      ..color = Colors.white.withValues(alpha: 0.12)
+      ..style = PaintingStyle.fill;
+
+    final pathBg = Path();
+    pathBg.moveTo(0, size.height);
+    pathBg.lineTo(0, yCenter);
 
     for (double x = 0; x <= size.width; x++) {
-      final y = yCenter + math.sin(x / size.width * 2 * math.pi + waveOffset) * 6;
-      path.lineTo(x, y);
+      final y = yCenter + math.sin(x / size.width * 2 * math.pi + waveOffset + math.pi) * (amplitude * 0.7);
+      pathBg.lineTo(x, y);
     }
 
-    path.lineTo(size.width, size.height);
-    path.close();
+    pathBg.lineTo(size.width, size.height);
+    pathBg.close();
+    canvas.drawPath(pathBg, paintBg);
 
-    canvas.drawPath(path, paint);
+    // 2. Foreground Wave (primary phase/amplitude, higher opacity)
+    final paintFg = Paint()
+      ..color = Colors.white.withValues(alpha: 0.25)
+      ..style = PaintingStyle.fill;
+
+    final pathFg = Path();
+    pathFg.moveTo(0, size.height);
+    pathFg.lineTo(0, yCenter);
+
+    for (double x = 0; x <= size.width; x++) {
+      final y = yCenter + math.sin(x / size.width * 2 * math.pi + waveOffset) * amplitude;
+      pathFg.lineTo(x, y);
+    }
+
+    pathFg.lineTo(size.width, size.height);
+    pathFg.close();
+    canvas.drawPath(pathFg, paintFg);
   }
 
   @override
   bool shouldRepaint(covariant _WavePainter oldDelegate) {
-    return oldDelegate.progress != progress || oldDelegate.waveOffset != waveOffset;
+    return oldDelegate.progress != progress ||
+        oldDelegate.waveOffset != waveOffset;
   }
 }
