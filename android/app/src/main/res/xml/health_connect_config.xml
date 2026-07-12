@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<health-connect-config>
+    <data-types>
+        <data-type name="Steps" />
+    </data-types>
+</health-connect-config>
