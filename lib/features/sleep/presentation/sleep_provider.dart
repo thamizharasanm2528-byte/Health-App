@@ -272,6 +272,13 @@ class SleepProvider extends ChangeNotifier {
     final consistency = (100 - (variance / 150)).round();
     return consistency.clamp(30, 100);
   }
+
+  @override
+  void dispose() {
+    _remindersBoxSub?.cancel();
+    _alarmSettingsBoxSub?.cancel();
+    super.dispose();
+  }
 }
 
 /// Statistics helper summary.
