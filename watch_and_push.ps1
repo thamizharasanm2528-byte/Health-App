@@ -2,7 +2,7 @@
 # PowerShell script to automatically stage, commit, and push changes in background.
 
 $repoPath = "d:\health_app\health_companion"
-cd $repoPath
+Set-Location $repoPath
 
 Write-Host "Starting Git Auto-Push Watcher in $repoPath..."
 
