@@ -12,6 +12,7 @@ import '../../../core/services/notifications/notification_service.dart';
 import '../../../core/services/notifications/notification_permission_service.dart';
 import '../../../core/routing/app_router.dart';
 import '../../../core/routing/route_names.dart';
+import '../../../core/services/app_logger.dart';
 import '../data/alarm_settings_model.dart';
 import '../domain/alarm_engine.dart';
 import '../../profile/data/profile_local_data_source.dart';
@@ -27,6 +28,16 @@ class AlarmProvider extends ChangeNotifier with WidgetsBindingObserver {
   late Box<AlarmSettingsModel> _box;
   List<AlarmSettingsModel> _alarms = [];
   List<AlarmSettingsModel> get alarms => _alarms;
+
+  String? _lastError;
+  String? get lastError => _lastError;
+
+  void clearLastError() {
+    if (_lastError != null) {
+      _lastError = null;
+      notifyListeners();
+    }
+  }
 
   final AlarmEngine _engine = AlarmEngine();
 
