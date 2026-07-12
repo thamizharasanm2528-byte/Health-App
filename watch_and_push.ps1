@@ -11,16 +11,21 @@ while ($true) {
         if (Test-Path "$repoPath\.git") {
             $status = git status --porcelain
             if ($status) {
-                Write-Host "Changes detected at $(Get-Date -Format 'HH:mm:ss'). Syncing..."
+                $statusMsg = "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Changes detected. Syncing..."
+                Add-Content -Path "$repoPath\watch_and_push.log" -Value $statusMsg
+                
                 git add -A
                 $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
                 git commit -m "Auto-sync changes: $timestamp"
-                git push origin -u main
-                Write-Host "Successfully pushed changes to GitHub."
+                git push origin main
+                
+                $successMsg = "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Successfully pushed changes to GitHub."
+                Add-Content -Path "$repoPath\watch_and_push.log" -Value $successMsg
             }
         }
     } catch {
-        Write-Warning "Failed to auto-push changes: $_"
+        $errMsg = "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Failed to auto-push: $_"
+        Add-Content -Path "$repoPath\watch_and_push.log" -Value $errMsg
     }
-    Start-Sleep -Seconds 60
+    Start-Sleep -Seconds 30
 }
