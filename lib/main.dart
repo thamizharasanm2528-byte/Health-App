@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/services/app_logger.dart';
+import 'core/services/app_refresh_coordinator.dart';
 import 'core/routing/app_router.dart';
 import 'core/routing/route_names.dart';
 import 'core/services/notifications/notification_service.dart';
@@ -364,63 +365,13 @@ class _HealthCompanionAppState extends State<HealthCompanionApp> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (context) {
-            final p = SettingsProvider(settingsRepo);
-            p.addListener(() {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (context.mounted) {
-                  try {
-                    Provider.of<DashboardProvider>(context, listen: false).refreshAll();
-                    Provider.of<HealthScoreProvider>(context, listen: false).refreshAll();
-                    Provider.of<BmiProvider>(context, listen: false).refreshAll();
-                    Provider.of<SleepProvider>(context, listen: false).refreshAll();
-                    Provider.of<StepProvider>(context, listen: false).refresh();
-                    Provider.of<WaterProvider>(context, listen: false).refresh();
-                  } catch (e, st) {
-                    AppLogger.error('SettingsProvider listener cascade refreshAll', e, st);
-                  }
-                }
-              });
-            });
-            return p;
-          },
+          create: (_) => SettingsProvider(settingsRepo),
         ),
         ChangeNotifierProvider(
-          create: (context) {
-            final p = AlarmProvider();
-            p.addListener(() {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (context.mounted) {
-                  try {
-                    Provider.of<DashboardProvider>(context, listen: false).refreshAll();
-                    Provider.of<SleepProvider>(context, listen: false).refreshAll();
-                  } catch (e, st) {
-                    AppLogger.error('AlarmProvider listener cascade refreshAll', e, st);
-                  }
-                }
-              });
-            });
-            return p;
-          },
+          create: (_) => AlarmProvider(),
         ),
         ChangeNotifierProvider(
-          create: (context) {
-            final p = RemindersProvider();
-            p.addListener(() {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (context.mounted) {
-                  try {
-                    Provider.of<DashboardProvider>(context, listen: false).refreshAll();
-                    Provider.of<SleepProvider>(context, listen: false).refreshAll();
-                    Provider.of<WaterProvider>(context, listen: false).refresh();
-                  } catch (e, st) {
-                    AppLogger.error('RemindersProvider listener cascade refreshAll', e, st);
-                  }
-                }
-              });
-            });
-            return p;
-          },
+          create: (_) => RemindersProvider(),
         ),
         ChangeNotifierProvider(
           create: (_) => ThemeProvider(settingsRepo),
@@ -429,113 +380,34 @@ class _HealthCompanionAppState extends State<HealthCompanionApp> {
           create: (_) => UnitsProvider(settingsRepo),
         ),
         ChangeNotifierProvider(
-          create: (context) {
-            final p = ProfileProvider(
-               ProfileRepositoryImpl(profileDataSource),
-            );
-            p.addListener(() {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (context.mounted) {
-                  try {
-                    Provider.of<DashboardProvider>(context, listen: false).refreshAll();
-                    Provider.of<HealthScoreProvider>(context, listen: false).refreshAll();
-                    Provider.of<BmiProvider>(context, listen: false).refreshAll();
-                    Provider.of<SleepProvider>(context, listen: false).refreshAll();
-                    Provider.of<StepProvider>(context, listen: false).refresh();
-                    Provider.of<WaterProvider>(context, listen: false).refresh();
-                  } catch (e, st) {
-                    AppLogger.error('ProfileProvider listener cascade refreshAll', e, st);
-                  }
-                }
-              });
-            });
-            return p;
-          },
+          create: (_) => ProfileProvider(
+            ProfileRepositoryImpl(profileDataSource),
+          ),
         ),
         ChangeNotifierProvider(
-          create: (context) {
-            final p = WaterProvider(
-              WaterRepositoryImpl(waterDataSource),
-              profileDataSource,
-            );
-            p.addListener(() {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (context.mounted) {
-                  try {
-                    Provider.of<DashboardProvider>(context, listen: false).refreshAll();
-                    Provider.of<HealthScoreProvider>(context, listen: false).refreshAll();
-                  } catch (e, st) {
-                    AppLogger.error('WaterProvider listener cascade refreshAll', e, st);
-                  }
-                }
-              });
-            });
-            return p;
-          },
+          create: (_) => WaterProvider(
+            WaterRepositoryImpl(waterDataSource),
+            profileDataSource,
+          ),
         ),
         ChangeNotifierProvider(
-          create: (context) {
-            final p = StepProvider(
-              StepRepositoryImpl(stepDataSource),
-              profileDataSource,
-              healthService,
-            );
-            p.addListener(() {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (context.mounted) {
-                  try {
-                    Provider.of<DashboardProvider>(context, listen: false).refreshAll();
-                    Provider.of<HealthScoreProvider>(context, listen: false).refreshAll();
-                  } catch (e, st) {
-                    AppLogger.error('StepProvider listener cascade refreshAll', e, st);
-                  }
-                }
-              });
-            });
-            return p;
-          },
+          create: (_) => StepProvider(
+            StepRepositoryImpl(stepDataSource),
+            profileDataSource,
+            healthService,
+          ),
         ),
         ChangeNotifierProvider(
-          create: (context) {
-            final p = BmiProvider(
-              BmiRepositoryImpl(bmiDataSource),
-              profileDataSource,
-            );
-            p.addListener(() {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (context.mounted) {
-                  try {
-                    Provider.of<DashboardProvider>(context, listen: false).refreshAll();
-                    Provider.of<HealthScoreProvider>(context, listen: false).refreshAll();
-                  } catch (e, st) {
-                    AppLogger.error('BmiProvider listener cascade refreshAll', e, st);
-                  }
-                }
-              });
-            });
-            return p;
-          },
+          create: (_) => BmiProvider(
+            BmiRepositoryImpl(bmiDataSource),
+            profileDataSource,
+          ),
         ),
         ChangeNotifierProvider(
-          create: (context) {
-            final p = SleepProvider(
-              SleepRepositoryImpl(sleepDataSource),
-              profileDataSource,
-            );
-            p.addListener(() {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (context.mounted) {
-                  try {
-                    Provider.of<DashboardProvider>(context, listen: false).refreshAll();
-                    Provider.of<HealthScoreProvider>(context, listen: false).refreshAll();
-                  } catch (e, st) {
-                    AppLogger.error('SleepProvider listener cascade refreshAll', e, st);
-                  }
-                }
-              });
-            });
-            return p;
-          },
+          create: (_) => SleepProvider(
+            SleepRepositoryImpl(sleepDataSource),
+            profileDataSource,
+          ),
         ),
         ChangeNotifierProvider(
           create: (_) => DashboardProvider(
@@ -557,43 +429,45 @@ class _HealthCompanionAppState extends State<HealthCompanionApp> {
       ],
       child: Consumer2<ThemeProvider, SettingsProvider>(
         builder: (context, themeProv, settingsProv, child) {
-          return AnimatedSwitcher(
-            duration: const Duration(milliseconds: 600),
-            switchInCurve: Curves.easeInOutCubic,
-            switchOutCurve: Curves.easeInOutCubic,
-            child: MaterialApp(
-              key: const ValueKey('health_companion_main_app'),
-              navigatorKey: globalNavigatorKey,
-              title: 'Health Companion',
-              debugShowCheckedModeBanner: false,
-              theme: AppTheme.getTheme(
-                brightness: Brightness.light,
-                accentColor: themeProv.accentColor,
+          return AppRefreshCoordinatorWidget(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 600),
+              switchInCurve: Curves.easeInOutCubic,
+              switchOutCurve: Curves.easeInOutCubic,
+              child: MaterialApp(
+                key: const ValueKey('health_companion_main_app'),
+                navigatorKey: globalNavigatorKey,
+                title: 'Health Companion',
+                debugShowCheckedModeBanner: false,
+                theme: AppTheme.getTheme(
+                  brightness: Brightness.light,
+                  accentColor: themeProv.accentColor,
+                ),
+                darkTheme: AppTheme.getTheme(
+                  brightness: Brightness.dark,
+                  accentColor: themeProv.accentColor,
+                ),
+                themeMode: themeProv.themeMode,
+                builder: (context, child) {
+                  final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+                  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+                    statusBarColor: Colors.transparent,
+                    statusBarIconBrightness: isDarkMode ? Brightness.light : Brightness.dark,
+                    statusBarBrightness: isDarkMode ? Brightness.dark : Brightness.light,
+                    systemNavigationBarColor: Colors.transparent,
+                    systemNavigationBarIconBrightness: isDarkMode ? Brightness.light : Brightness.dark,
+                    systemNavigationBarDividerColor: Colors.transparent,
+                  ));
+                  return MediaQuery(
+                    data: MediaQuery.of(context).copyWith(
+                      textScaler: TextScaler.linear(settingsProv.textScaleFactor),
+                    ),
+                    child: child!,
+                  );
+                },
+                initialRoute: RouteNames.splash,
+                onGenerateRoute: AppRouter.onGenerateRoute,
               ),
-              darkTheme: AppTheme.getTheme(
-                brightness: Brightness.dark,
-                accentColor: themeProv.accentColor,
-              ),
-              themeMode: themeProv.themeMode,
-              builder: (context, child) {
-                final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-                SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-                  statusBarColor: Colors.transparent,
-                  statusBarIconBrightness: isDarkMode ? Brightness.light : Brightness.dark,
-                  statusBarBrightness: isDarkMode ? Brightness.dark : Brightness.light,
-                  systemNavigationBarColor: Colors.transparent,
-                  systemNavigationBarIconBrightness: isDarkMode ? Brightness.light : Brightness.dark,
-                  systemNavigationBarDividerColor: Colors.transparent,
-                ));
-                return MediaQuery(
-                  data: MediaQuery.of(context).copyWith(
-                    textScaler: TextScaler.linear(settingsProv.textScaleFactor),
-                  ),
-                  child: child!,
-                );
-              },
-              initialRoute: RouteNames.splash,
-              onGenerateRoute: AppRouter.onGenerateRoute,
             ),
           );
         },
