@@ -235,14 +235,21 @@ class WaterProvider extends ChangeNotifier {
 
   Future<void> markGoalAlertShownToday() async {
     final todayStr = '${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day}';
+    final previousValue = _lastAlertShownDate;
     _lastAlertShownDate = todayStr;
     notifyListeners();
     try {
+      _lastError = null;
       final box = Hive.box('app_state');
       await box.put('water_goal_alert_shown_date', todayStr);
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('water_goal_alert_shown_date', todayStr);
-    } catch (_) {}
+    } catch (e, st) {
+      _lastAlertShownDate = previousValue;
+      _lastError = 'Failed to mark water goal alert: $e';
+      AppLogger.error('WaterProvider.markGoalAlertShownToday', e, st);
+      notifyListeners();
+    }
   }
 
   bool _remindersEnabled = false;
@@ -276,14 +283,18 @@ class WaterProvider extends ChangeNotifier {
       } else {
         _lastAlertShownDate = sharedPrefs.getString('water_goal_alert_shown_date') ?? '';
       }
-    } catch (_) {}
+    } catch (e, st) {
+      AppLogger.error('WaterProvider._loadReminderPreferencesCached', e, st);
+    }
   }
 
   Future<void> setRemindersEnabled(bool enabled) async {
+    final previousValue = _remindersEnabled;
     _remindersEnabled = enabled;
     notifyListeners(); // Instant UI update
     
     try {
+      _lastError = null;
       final box = Hive.box<ReminderModel>('reminders_box');
       final reminder = box.get('water');
       if (reminder != null) {
@@ -302,14 +313,21 @@ class WaterProvider extends ChangeNotifier {
           await manager.cancelWaterReminders();
         }
       }
-    } catch (_) {}
+    } catch (e, st) {
+      _remindersEnabled = previousValue;
+      _lastError = 'Failed to update reminder status: $e';
+      AppLogger.error('WaterProvider.setRemindersEnabled', e, st);
+      notifyListeners();
+    }
   }
 
   void setReminderInterval(int minutes) async {
+    final previousValue = _reminderIntervalMinutes;
     _reminderIntervalMinutes = minutes;
     notifyListeners();
     
     try {
+      _lastError = null;
       final box = Hive.box<ReminderModel>('reminders_box');
       final reminder = box.get('water');
       if (reminder != null) {
@@ -332,7 +350,12 @@ class WaterProvider extends ChangeNotifier {
           );
         }
       }
-    } catch (_) {}
+    } catch (e, st) {
+      _reminderIntervalMinutes = previousValue;
+      _lastError = 'Failed to update reminder interval: $e';
+      AppLogger.error('WaterProvider.setReminderInterval', e, st);
+      notifyListeners();
+    }
   }
 
   void setReminderStartHour(int hour) async {

@@ -116,6 +116,19 @@ class _WaterScreenState extends State<WaterScreen> with SingleTickerProviderStat
     // Check goal progression
     _checkGoalMet(provider);
 
+    if (provider.lastError != null) {
+      final error = provider.lastError!;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error),
+            backgroundColor: theme.colorScheme.error,
+          ),
+        );
+        provider.clearLastError();
+      });
+    }
+
     return Scaffold(
       body: Stack(
         children: [
