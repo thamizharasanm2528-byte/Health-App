@@ -7,6 +7,7 @@ import '../../profile/data/profile_model.dart';
 import '../data/bmi_entry.dart';
 import '../data/bmi_local_data_source.dart';
 import '../domain/bmi_repository.dart';
+import '../domain/bmi_calculator.dart';
 
 /// Provider class managing the BMI calculation, history, recommendations, and weight goal tracking.
 class BmiProvider extends ChangeNotifier {
@@ -54,43 +55,22 @@ class BmiProvider extends ChangeNotifier {
   // ── Calculation ──────────────────────────────────────────────────────
 
   /// Calculates BMI value = weight(kg) / height(m)^2.
-  double get bmiValue {
-    if (_heightCm <= 0) return 0.0;
-    final heightM = _heightCm / 100;
-    return _weightKg / (heightM * heightM);
-  }
+  double get bmiValue => BmiCalculator.calculateBmi(_weightKg, _heightCm);
 
   /// Categorizes the BMI score.
-  String get bmiCategory {
-    final value = bmiValue;
-    if (value < 18.5) return 'Underweight';
-    if (value < 25.0) return 'Healthy';
-    if (value < 30.0) return 'Overweight';
-    return 'Obese';
-  }
+  String get bmiCategory => BmiCalculator.getCategory(bmiValue);
 
   /// Calculates the healthy weight range for the current height (BMI 18.5 to 24.9).
   String get healthyWeightRange {
     if (_heightCm <= 0) return '--';
-    final heightM = _heightCm / 100;
-    final low = 18.5 * heightM * heightM;
-    final high = 24.9 * heightM * heightM;
-    return '${low.toStringAsFixed(1)}–${high.toStringAsFixed(1)} kg';
+    return '${healthyWeightMin.toStringAsFixed(1)}–${healthyWeightMax.toStringAsFixed(1)} kg';
   }
 
   /// Calculates the minimum healthy weight limit.
-  double get healthyWeightMin {
-    if (_heightCm <= 0) return 0.0;
-    final heightM = _heightCm / 100;
-    return 18.5 * heightM * heightM;
-  }
+  double get healthyWeightMin => BmiCalculator.healthyWeightMin(_heightCm);
 
   /// Calculates the maximum healthy weight limit.
-  double get healthyWeightMax {
-    if (_heightCm <= 0) return 0.0;
-    final heightM = _heightCm / 100;
-    return 24.9 * heightM * heightM;
-  }
+  double get healthyWeightMax => BmiCalculator.healthyWeightMax(_heightCm);
 
   /// Updates input values in real-time.
   void updateHeight(double height) {
