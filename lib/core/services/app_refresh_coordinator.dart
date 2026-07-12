@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'app_logger.dart';
 import '../../features/settings/presentation/settings_provider.dart';
 import '../../features/alarm/presentation/alarm_provider.dart';
-import '../../reminders/presentation/reminders_provider.dart';
+import '../../features/reminders/presentation/reminders_provider.dart';
 import '../../features/profile/presentation/profile_provider.dart';
 import '../../features/water/presentation/water_provider.dart';
 import '../../features/steps/presentation/step_provider.dart';
@@ -21,7 +21,7 @@ class AppRefreshCoordinator {
   AppRefreshCoordinator(this.context);
 
   /// Explicit dependency graph declaring source provider types and their target types.
-  static const Map<Type, List<Type>> _refreshGraph = {
+  static final Map<Type, List<Type>> _refreshGraph = {
     SettingsProvider: [
       DashboardProvider,
       HealthScoreProvider,
