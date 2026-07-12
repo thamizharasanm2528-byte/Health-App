@@ -369,6 +369,7 @@ class AlarmProvider extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<void> syncBedtimeWithWakeTime(int wakeHour, int wakeMinute) async {
     try {
+      _lastError = null;
       final prefs = await SharedPreferences.getInstance();
       final preferredHours = prefs.getInt('preferred_sleep_duration_hours') ?? 8;
       
@@ -405,7 +406,11 @@ class AlarmProvider extends ChangeNotifier with WidgetsBindingObserver {
       
       final engine = ReminderEngine();
       await engine.rescheduleReminder(bedtimeReminder);
-    } catch (_) {}
+    } catch (e, st) {
+      _lastError = 'Failed to sync bedtime settings: $e';
+      AppLogger.error('AlarmProvider.syncBedtimeWithWakeTime', e, st);
+      notifyListeners();
+    }
   }
 
   // ── Ringtone Playback Control (For previewing) ─────────────────────────
