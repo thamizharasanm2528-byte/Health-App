@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
+import '../../../core/services/app_logger.dart';
 import '../../profile/data/profile_local_data_source.dart';
 import '../../profile/data/profile_model.dart';
 import '../data/bmi_entry.dart';
@@ -23,7 +24,9 @@ class BmiProvider extends ChangeNotifier {
       try {
         final box = Hive.box<BMIEntry>(BmiLocalDataSource.boxName);
         box.clear();
-      } catch (_) {}
+      } catch (e, st) {
+        AppLogger.error('BmiProvider._sanitizeHistory (clear box)', e, st);
+      }
       _history = [];
       notifyListeners();
     }
