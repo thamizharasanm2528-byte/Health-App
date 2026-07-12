@@ -169,7 +169,6 @@ class AppRefreshCoordinatorWidget extends StatefulWidget {
 }
 
 class _AppRefreshCoordinatorWidgetState extends State<AppRefreshCoordinatorWidget> {
-  AppRefreshCoordinator? _coordinator;
   final List<VoidCallback> _removeListeners = [];
   bool _initialized = false;
 
@@ -184,7 +183,6 @@ class _AppRefreshCoordinatorWidgetState extends State<AppRefreshCoordinatorWidge
 
   void _setupCoordinator() {
     final coord = AppRefreshCoordinator(context);
-    _coordinator = coord;
 
     _bindSource<SettingsProvider>(coord);
     _bindSource<AlarmProvider>(coord);

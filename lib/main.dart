@@ -8,7 +8,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'core/services/app_logger.dart';
 import 'core/services/app_refresh_coordinator.dart';
 import 'core/routing/app_router.dart';
 import 'core/routing/route_names.dart';
