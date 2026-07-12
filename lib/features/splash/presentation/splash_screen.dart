@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
+import '../../../core/services/app_logger.dart';
 import '../../../core/routing/route_names.dart';
 import '../../profile/data/profile_local_data_source.dart';
 import 'widgets/splash_background.dart';
@@ -101,7 +102,9 @@ class _SplashScreenState extends State<SplashScreen>
     try {
       final box = Hive.box('app_state');
       onboardingDone = box.get('onboarding_completed', defaultValue: false) as bool;
-    } catch (_) {}
+    } catch (e, st) {
+      AppLogger.error('SplashScreen._scheduleNavigation (Hive read app_state)', e, st);
+    }
     final profileExists = ProfileLocalDataSource().hasProfile();
 
     // Ensure the splash shows for at least the full duration.

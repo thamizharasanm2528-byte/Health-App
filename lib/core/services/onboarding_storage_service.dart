@@ -1,5 +1,6 @@
 import 'package:hive/hive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'app_logger.dart';
 
 /// Service for persisting onboarding completion status.
 ///
@@ -15,7 +16,9 @@ class OnboardingStorageService {
       final box = Hive.box('app_state');
       final hiveResult = box.get(_key, defaultValue: false) as bool;
       if (hiveResult) return true;
-    } catch (_) {}
+    } catch (e, st) {
+      AppLogger.error('OnboardingStorageService.isOnboardingCompleted (Hive read)', e, st);
+    }
     
     final prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_key) ?? false;
@@ -26,7 +29,9 @@ class OnboardingStorageService {
     try {
       final box = Hive.box('app_state');
       await box.put(_key, true);
-    } catch (_) {}
+    } catch (e, st) {
+      AppLogger.error('OnboardingStorageService.setOnboardingCompleted (Hive write)', e, st);
+    }
     
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_key, true);
