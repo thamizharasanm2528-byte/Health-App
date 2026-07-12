@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:hive/hive.dart';
@@ -16,12 +17,15 @@ class SleepProvider extends ChangeNotifier {
   final SleepRepository _repository;
   final ProfileLocalDataSource _profileDataSource;
 
+  StreamSubscription? _remindersBoxSub;
+  StreamSubscription? _alarmSettingsBoxSub;
+
   SleepProvider(this._repository, this._profileDataSource) {
     _loadProfile();
     _loadRecords();
 
     try {
-      Hive.box<ReminderModel>('reminders_box').watch().listen((_) {
+      _remindersBoxSub = Hive.box<ReminderModel>('reminders_box').watch().listen((_) {
         _loadProfile();
         notifyListeners();
       });
@@ -30,7 +34,7 @@ class SleepProvider extends ChangeNotifier {
     }
 
     try {
-      Hive.box<AlarmSettingsModel>('alarm_settings_box').watch().listen((_) {
+      _alarmSettingsBoxSub = Hive.box<AlarmSettingsModel>('alarm_settings_box').watch().listen((_) {
         _loadProfile();
         notifyListeners();
       });

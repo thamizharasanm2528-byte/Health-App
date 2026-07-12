@@ -143,5 +143,9 @@ class RemindersProvider extends ChangeNotifier {
     return '${weekdayNames[next.weekday - 1]}, $timeStr';
   }
 
-
+  @override
+  void dispose() {
+    _boxSub?.cancel();
+    super.dispose();
+  }
 }
