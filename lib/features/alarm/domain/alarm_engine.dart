@@ -34,7 +34,9 @@ class AlarmEngine {
     final hour = alarm.hour;
     final minute = alarm.minute;
     final title = '⏰ Wake up! Time to shine!';
-    final body = alarm.label.isNotEmpty ? alarm.label : 'Stay consistent with your healthy routine.';
+    final body = alarm.label.isNotEmpty
+        ? alarm.label
+        : 'Stay consistent with your healthy routine.';
 
     if (alarm.repeatDays.isEmpty) {
       // One-time alarm
@@ -93,7 +95,7 @@ class AlarmEngine {
   /// Snoozes the alarm.
   Future<void> snoozeAlarm(AlarmSettingsModel alarm) async {
     final baseId = wakeupBaseId + (alarm.id % 50000) * 10;
-    
+
     // Stop currently ringing alarms/snoozes for this alarm
     for (int i = 0; i <= 8; i++) {
       await Alarm.stop(baseId + i);
@@ -131,7 +133,7 @@ class AlarmEngine {
   }
 
   // ── Reminders Scheduling ──
-  
+
   /// Reschedules Water reminder times.
   Future<void> scheduleWaterReminder(ReminderModel reminder) async {
     // 1. Cancel previous scheduled items
@@ -158,6 +160,7 @@ class AlarmEngine {
           assetAudioPath: 'assets/water_remainder.mp3',
           loopAudio: false,
           vibrate: reminder.vibrate,
+          androidFullScreenIntent: false,
           volumeSettings: const VolumeSettings.fixed(volume: 0.7),
           notificationSettings: NotificationSettings(
             title: reminder.title,
@@ -176,6 +179,7 @@ class AlarmEngine {
             assetAudioPath: 'assets/water_remainder.mp3',
             loopAudio: false,
             vibrate: reminder.vibrate,
+            androidFullScreenIntent: false,
             volumeSettings: const VolumeSettings.fixed(volume: 0.7),
             notificationSettings: NotificationSettings(
               title: reminder.title,
@@ -225,6 +229,7 @@ class AlarmEngine {
           assetAudioPath: 'assets/bedtime.mp3',
           loopAudio: false,
           vibrate: reminder.vibrate,
+          androidFullScreenIntent: false,
           volumeSettings: const VolumeSettings.fixed(volume: 0.6),
           notificationSettings: NotificationSettings(
             title: reminder.title,
@@ -243,6 +248,7 @@ class AlarmEngine {
             assetAudioPath: 'assets/bedtime.mp3',
             loopAudio: false,
             vibrate: reminder.vibrate,
+            androidFullScreenIntent: false,
             volumeSettings: const VolumeSettings.fixed(volume: 0.6),
             notificationSettings: NotificationSettings(
               title: reminder.title,
