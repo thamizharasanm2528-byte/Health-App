@@ -1,7 +1,10 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -68,18 +71,126 @@ void main() {
   runApp(const HealthCompanionApp());
 }
 
-Future<Box<T>> _safeOpenBox<T>(String name) async {
+/// Checks if the error message matches standard Hive corruption conditions.
+bool _isHiveCorruptionError(Object? error) {
+  if (error is! HiveError) return false;
+  
+  final errorStr = error.toString().toLowerCase();
+  final corruptionKeywords = [
+    'corrupt',
+    'malformed',
+    'invalid header',
+    'not a hive file',
+    'unexpected end',
+    'deserialize',
+    'wrong magic number',
+    'signature',
+  ];
+  
+  return corruptionKeywords.any((keyword) => errorStr.contains(keyword));
+}
+
+/// Records a database recovery incident persistently in SharedPreferences.
+Future<void> _recordIncident({
+  required String boxName,
+  required String error,
+  required String action,
+}) async {
   try {
-    return await Hive.openBox<T>(name);
+    final incident = {
+      'boxName': boxName,
+      'timestamp': DateTime.now().toUtc().toIso8601String(),
+      'error': error,
+      'action': action,
+    };
+    final list = sharedPrefs.getStringList('hive_recovery_incidents') ?? [];
+    list.add(jsonEncode(incident));
+    await sharedPrefs.setStringList('hive_recovery_incidents', list);
   } catch (e) {
     if (kDebugMode) {
-      print('Hive openBox error for "$name": $e. Deleting and recreating...');
+      debugPrint('Failed to record Hive recovery incident to SharedPreferences: $e');
     }
-    try {
-      await Hive.deleteBoxFromDisk(name);
-    } catch (_) {}
-    return await Hive.openBox<T>(name);
   }
+}
+
+/// Safely opens a Hive box, retrying transient errors and performing non-destructive file backups for corruption.
+Future<Box<T>> _safeOpenBox<T>(String name) async {
+  const int maxAttempts = 3;
+  Object? lastError;
+
+  for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await Hive.openBox<T>(name);
+    } catch (e) {
+      lastError = e;
+      if (kDebugMode) {
+        debugPrint('Hive.openBox error for "$name" (attempt $attempt/$maxAttempts): $e');
+      }
+      if (attempt < maxAttempts) {
+        await Future.delayed(const Duration(milliseconds: 250));
+      }
+    }
+  }
+
+  // All attempts failed. Check if error is corruption.
+  final errorStr = lastError.toString();
+  final isCorrupted = _isHiveCorruptionError(lastError);
+
+  if (isCorrupted) {
+    if (kDebugMode) {
+      debugPrint('Hive box "$name" is corrupted. Creating a backup and re-initializing...');
+    }
+
+    bool backupSucceeded = false;
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final boxFile = File('${dir.path}/$name.hive');
+      final lockFile = File('${dir.path}/$name.lock');
+      final timestamp = DateTime.now().toUtc().toIso8601String().replaceAll(':', '-');
+
+      if (await boxFile.exists()) {
+        await boxFile.rename('${boxFile.path}.corrupted_$timestamp');
+        backupSucceeded = true;
+      } else {
+        // If the box file itself doesn't exist, we don't have anything to back up,
+        // but we can proceed to recreate/reopen the box.
+        backupSucceeded = true;
+      }
+
+      if (await lockFile.exists()) {
+        await lockFile.rename('${lockFile.path}.corrupted_$timestamp');
+      }
+    } catch (backupError) {
+      if (kDebugMode) {
+        debugPrint('Failed to back up corrupted box "$name": $backupError');
+      }
+      // Rethrow the original error to trigger the UI error screen if we cannot safely back up
+      throw lastError!;
+    }
+
+    if (backupSucceeded) {
+      await _recordIncident(
+        boxName: name,
+        error: errorStr,
+        action: 'backed_up_and_recreated',
+      );
+
+      try {
+        return await Hive.openBox<T>(name);
+      } catch (recreateError) {
+        if (kDebugMode) {
+          debugPrint('Failed to open fresh box "$name" after backup: $recreateError');
+        }
+        rethrow;
+      }
+    }
+  }
+
+  // Non-corruption errors or if we decided not to back up: rethrow to trigger startup error screen
+  if (kDebugMode) {
+    debugPrint('Hive box "$name" failed with non-corruption error. Rethrowing.');
+  }
+  throw lastError!;
 }
 
 /// Root widget of the Health Companion application.
