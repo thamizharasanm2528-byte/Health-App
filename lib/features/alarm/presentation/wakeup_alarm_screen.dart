@@ -16,6 +16,19 @@ class WakeupAlarmScreen extends StatelessWidget {
     final alarmProv = context.watch<AlarmProvider>();
     final alarms = alarmProv.alarms;
 
+    if (alarmProv.lastError != null) {
+      final error = alarmProv.lastError!;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error),
+            backgroundColor: theme.colorScheme.error,
+          ),
+        );
+        alarmProv.clearLastError();
+      });
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Row(
