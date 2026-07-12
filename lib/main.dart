@@ -376,7 +376,9 @@ class _HealthCompanionAppState extends State<HealthCompanionApp> {
                     Provider.of<SleepProvider>(context, listen: false).refreshAll();
                     Provider.of<StepProvider>(context, listen: false).refresh();
                     Provider.of<WaterProvider>(context, listen: false).refresh();
-                  } catch (_) {}
+                  } catch (e, st) {
+                    AppLogger.error('SettingsProvider listener cascade refreshAll', e, st);
+                  }
                 }
               });
             });
@@ -392,7 +394,9 @@ class _HealthCompanionAppState extends State<HealthCompanionApp> {
                   try {
                     Provider.of<DashboardProvider>(context, listen: false).refreshAll();
                     Provider.of<SleepProvider>(context, listen: false).refreshAll();
-                  } catch (_) {}
+                  } catch (e, st) {
+                    AppLogger.error('AlarmProvider listener cascade refreshAll', e, st);
+                  }
                 }
               });
             });
@@ -409,7 +413,9 @@ class _HealthCompanionAppState extends State<HealthCompanionApp> {
                     Provider.of<DashboardProvider>(context, listen: false).refreshAll();
                     Provider.of<SleepProvider>(context, listen: false).refreshAll();
                     Provider.of<WaterProvider>(context, listen: false).refresh();
-                  } catch (_) {}
+                  } catch (e, st) {
+                    AppLogger.error('RemindersProvider listener cascade refreshAll', e, st);
+                  }
                 }
               });
             });
