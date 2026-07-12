@@ -1,4 +1,4 @@
-import '../../data/reminder_model.dart';
+import '../data/reminder_model.dart';
 
 /// Pure calculator helper to compute scheduled reminder dates without platform IO dependencies.
 class ReminderCalculator {
