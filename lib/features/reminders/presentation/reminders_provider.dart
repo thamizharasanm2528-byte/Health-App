@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import '../data/reminder_model.dart';
 import '../domain/reminder_engine.dart';
+import '../domain/reminder_calculator.dart';
 
 class RemindersProvider extends ChangeNotifier {
   static const String boxName = 'reminders_box';
@@ -66,7 +67,7 @@ class RemindersProvider extends ChangeNotifier {
     await _engine.rescheduleReminder(reminder);
   }
 
-  /// Reschedules all reminders (e.g. on app startup).
+  /// Reschedules all enabled reminders.
   Future<void> rescheduleAll() async {
     for (final reminder in _reminders) {
       if (reminder.isEnabled) {
@@ -86,32 +87,7 @@ class RemindersProvider extends ChangeNotifier {
 
   /// Calculates the next occurrence of a reminder.
   DateTime? getNextOccurrence(ReminderModel reminder) {
-    if (!reminder.isEnabled || reminder.reminderTimes.isEmpty) return null;
-    
-    final now = DateTime.now();
-    final currentMinutes = now.hour * 60 + now.minute;
-    
-    final sortedTimes = List<int>.from(reminder.reminderTimes)..sort();
-    
-    // Check if there's any time slot left today
-    for (final time in sortedTimes) {
-      if (time > currentMinutes) {
-        if (reminder.repeatDays.isEmpty || reminder.repeatDays.contains(now.weekday)) {
-          return DateTime(now.year, now.month, now.day, time ~/ 60, time % 60);
-        }
-      }
-    }
-    
-    // Check coming days (up to 7 days out)
-    for (int i = 1; i <= 7; i++) {
-      final targetDate = now.add(Duration(days: i));
-      if (reminder.repeatDays.isEmpty || reminder.repeatDays.contains(targetDate.weekday)) {
-        final time = sortedTimes.first;
-        return DateTime(targetDate.year, targetDate.month, targetDate.day, time ~/ 60, time % 60);
-      }
-    }
-    
-    return null;
+    return ReminderCalculator.getNextOccurrence(reminder, DateTime.now());
   }
 
   /// Formats the next scheduled occurrence of a reminder for display.
