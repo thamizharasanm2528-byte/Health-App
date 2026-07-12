@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hive/hive.dart';
 
+import '../../../core/services/app_logger.dart';
 import '../../reminders/data/reminder_model.dart';
 
 import '../../../core/services/notifications/notification_service.dart';
@@ -19,6 +20,16 @@ class WaterProvider extends ChangeNotifier {
   final WaterRepository _repository;
   final ProfileLocalDataSource _profileDataSource;
 
+  String? _lastError;
+  String? get lastError => _lastError;
+
+  void clearLastError() {
+    if (_lastError != null) {
+      _lastError = null;
+      notifyListeners();
+    }
+  }
+
   WaterProvider(this._repository, this._profileDataSource) {
     _loadData();
     _loadReminderPreferencesCached();
@@ -29,13 +40,17 @@ class WaterProvider extends ChangeNotifier {
         _loadReminderPreferencesCached();
         notifyListeners();
       });
-    } catch (_) {}
+    } catch (e, st) {
+      AppLogger.error('WaterProvider (reminders_box watch)', e, st);
+    }
 
     // Synchronously read the goal alert shown date from Hive to prevent startup race condition
     try {
       final box = Hive.box('app_state');
       _lastAlertShownDate = box.get('water_goal_alert_shown_date') as String? ?? '';
-    } catch (_) {}
+    } catch (e, st) {
+      AppLogger.error('WaterProvider constructor (water_goal_alert_shown_date read)', e, st);
+    }
   }
 
   // ── Data ─────────────────────────────────────────────────────────────
