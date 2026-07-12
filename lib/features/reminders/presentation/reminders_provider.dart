@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import '../data/reminder_model.dart';
@@ -8,6 +9,7 @@ class RemindersProvider extends ChangeNotifier {
   
   late Box<ReminderModel> _box;
   final ReminderEngine _engine = ReminderEngine();
+  StreamSubscription? _boxSub;
 
   List<ReminderModel> _reminders = [];
   List<ReminderModel> get reminders => _reminders;
@@ -19,7 +21,7 @@ class RemindersProvider extends ChangeNotifier {
   Future<void> _init() async {
     _box = Hive.box<ReminderModel>(boxName);
     _loadReminders();
-    _box.watch().listen((_) {
+    _boxSub = _box.watch().listen((_) {
       _loadReminders();
     });
   }
