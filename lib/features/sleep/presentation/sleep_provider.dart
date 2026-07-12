@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:hive/hive.dart';
 
+import '../../../core/services/app_logger.dart';
 import '../../profile/data/profile_local_data_source.dart';
 import '../../profile/data/profile_model.dart';
 import '../../reminders/data/reminder_model.dart';
@@ -24,14 +25,18 @@ class SleepProvider extends ChangeNotifier {
         _loadProfile();
         notifyListeners();
       });
-    } catch (_) {}
+    } catch (e, st) {
+      AppLogger.error('SleepProvider (reminders_box watch)', e, st);
+    }
 
     try {
       Hive.box<AlarmSettingsModel>('alarm_settings_box').watch().listen((_) {
         _loadProfile();
         notifyListeners();
       });
-    } catch (_) {}
+    } catch (e, st) {
+      AppLogger.error('SleepProvider (alarm_settings_box watch)', e, st);
+    }
   }
 
   // ── Target Sleep & Profile state ──────────────────────────────────────
@@ -46,6 +51,7 @@ class SleepProvider extends ChangeNotifier {
   int get wakeTimeMinutes => _wakeTimeMinutes;
 
   bool _hasWakeupAlarm = false;
+  int get wakeMinutes => _wakeTimeMinutes; // (if needed by other code symbols)
   bool get hasWakeupAlarm => _hasWakeupAlarm;
 
   void _loadProfile() {
@@ -62,7 +68,9 @@ class SleepProvider extends ChangeNotifier {
       if (reminder != null && reminder.reminderTimes.isNotEmpty) {
         _bedtimeMinutes = reminder.reminderTimes.first;
       }
-    } catch (_) {}
+    } catch (e, st) {
+      AppLogger.error('SleepProvider._loadProfile (bedtime read)', e, st);
+    }
 
     // Sync wakeup from primary active alarm in alarm_settings_box
     try {
