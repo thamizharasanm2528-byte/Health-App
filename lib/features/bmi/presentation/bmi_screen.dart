@@ -271,41 +271,4 @@ class _BmiScreenState extends State<BmiScreen> with SingleTickerProviderStateMix
       ),
     );
   }
-    // Obese (30.0 to 35.0 -> 5.0 units)
-    paint.color = AppColors.error.withValues(alpha: 0.8);
-    canvas.drawArc(rect, startAngle + totalSweep * (15.0 / 20.0), totalSweep * (5.0 / 20.0), false, paint);
-
-    // Calculate needle angle
-    final fraction = ((bmi - 15.0) / 20.0).clamp(0.0, 1.0);
-    final needleAngle = math.pi + fraction * math.pi;
-
-    // Draw needle
-    final needlePaint = Paint()
-      ..color = themeColor
-      ..strokeWidth = 4
-      ..strokeCap = StrokeCap.round;
-    
-    final needleLength = radius - 15;
-    final tip = Offset(
-      center.dx + needleLength * math.cos(needleAngle),
-      center.dy + needleLength * math.sin(needleAngle),
-    );
-    canvas.drawLine(center, tip, needlePaint);
-
-    // Draw pivot center
-    final pivotPaint = Paint()
-      ..color = themeColor
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, 8, pivotPaint);
-
-    final pivotCenterPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, 4, pivotCenterPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant BmiGaugePainter oldDelegate) {
-    return oldDelegate.bmi != bmi || oldDelegate.themeColor != themeColor;
-  }
 }
