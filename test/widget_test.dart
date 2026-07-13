@@ -1,12 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:health_companion/main.dart';
+import 'package:health_companion/features/splash/presentation/interactive_initialization_screen.dart';
 
 void main() {
-  testWidgets('App renders splash screen', (WidgetTester tester) async {
+  testWidgets('App renders initialization screen', (WidgetTester tester) async {
     await tester.pumpWidget(const HealthCompanionApp());
 
-    // Verify the splash screen renders with the app title.
-    expect(find.text('Health Companion'), findsOneWidget);
+    // Build the first frame.
+    await tester.pump();
+
+    expect(find.byType(InteractiveInitializationScreen), findsOneWidget);
   });
 }
