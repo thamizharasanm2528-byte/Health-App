@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../reminders/presentation/reminders_provider.dart';
-import '../../../reminders/domain/reminder_model.dart';
+import '../../../reminders/data/reminder_model.dart';
 import 'time_picker_row.dart';
 import 'days_selector.dart';
 import 'toggle_row.dart';
