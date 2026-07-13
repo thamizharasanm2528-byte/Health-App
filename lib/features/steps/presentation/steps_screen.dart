@@ -1,14 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:health/health.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../shared/widgets/common_card.dart';
 import '../../../shared/widgets/health_button.dart';
 import '../../../shared/widgets/loading_card.dart';
 import 'step_provider.dart';
@@ -17,6 +15,11 @@ import 'widgets/step_chart.dart';
 import 'widgets/step_history_list.dart';
 import 'widgets/step_progress_card.dart';
 import 'widgets/step_streak_card.dart';
+import 'widgets/steps_empty_state.dart';
+import 'widgets/steps_motivational_card.dart';
+import 'widgets/goal_settings_dialog.dart';
+import 'widgets/congratulations_dialog.dart';
+import 'widgets/permanently_denied_dialog.dart';
 
 /// Step Tracker Screen
 ///
@@ -39,68 +42,18 @@ class _StepsScreenState extends State<StepsScreen> {
     if (today != null && today.isGoalAchieved && !_goalReachedAlertShown) {
       _goalReachedAlertShown = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showCongratulationsDialog(context);
+        showCongratulationsDialog(context);
       });
     } else if (today != null && !today.isGoalAchieved) {
       _goalReachedAlertShown = false;
     }
   }
 
-  void _showCongratulationsDialog(BuildContext context) {
-    HapticFeedback.mediumImpact();
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 16),
-            TweenAnimationBuilder<double>(
-              tween: Tween<double>(begin: 0.0, end: 1.0),
-              duration: const Duration(milliseconds: 800),
-              curve: Curves.bounceOut,
-              builder: (context, val, child) {
-                return Transform.scale(
-                  scale: val,
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: const BoxDecoration(
-                      color: Colors.orange,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.check_rounded,
-                      color: Colors.white,
-                      size: 48,
-                    ),
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Step Goal Crushed!',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: Colors.orange,
-                  ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              "Incredible effort! You have completed today's step target. Keep walking towards a healthier lifestyle!",
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 24),
-            HealthButton(
-              label: 'Keep Moving!',
-              onPressed: () => Navigator.pop(ctx),
-            ),
-          ],
-        ),
-      ),
-    );
+  Future<void> _handlePermanentlyDeniedDialog(StepProvider provider) async {
+    if (_dialogShown) return;
+    _dialogShown = true;
+    await showPermanentlyDeniedDialog(context);
+    _dialogShown = false;
   }
 
   @override
@@ -131,105 +84,10 @@ class _StepsScreenState extends State<StepsScreen> {
     super.dispose();
   }
 
-  void _showPermanentlyDeniedDialog(BuildContext context, StepProvider provider) {
-    if (_dialogShown) return;
-    _dialogShown = true;
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          title: const Text('Permission Required'),
-          content: const Text(
-            'Health Companion requires Activity Recognition and Health Connect permissions to automatically read and sync your daily steps. Please enable them in the application settings.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                _dialogShown = false;
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                openAppSettings();
-                Navigator.pop(ctx);
-                _dialogShown = false;
-              },
-              child: const Text('Open Settings'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   Future<void> _openPlayStore() async {
     final url = Uri.parse('https://play.google.com/store/apps/details?id=com.google.android.apps.healthdata');
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
-    }
-  }
-
-  Widget _buildEmptyState({
-    required BuildContext context,
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required List<Widget> actions,
-  }) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Center(
-        child: CommonCard(
-          padding: const EdgeInsets.all(28.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, size: 48, color: theme.colorScheme.primary),
-              ),
-              const SizedBox(height: 24),
-              Text(
-                title,
-                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                subtitle,
-                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              ...actions.map((act) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12.0),
-                    child: act,
-                  )),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  String _getMotivationalMessage(int steps) {
-    if (steps < 3000) {
-      return "Every step is a step closer to your fitness goals! Let's get moving. 🚶‍♂️";
-    } else if (steps < 7000) {
-      return "Great progress! You are on your way to meeting today's target. Keep pushing! 🚀";
-    } else if (steps < 10000) {
-      return "Amazing! Almost there. Just a little more walk to hit the goal! ⚡";
-    } else {
-      return "Outstanding! You've crushed today's step goal. Outstanding achievement! 🏆";
     }
   }
 
@@ -245,7 +103,7 @@ class _StepsScreenState extends State<StepsScreen> {
     // Check for permanent permission denial
     if (provider.isPermissionsPermanentlyDenied) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showPermanentlyDeniedDialog(context, provider);
+        _handlePermanentlyDeniedDialog(provider);
       });
     }
 
@@ -278,8 +136,7 @@ class _StepsScreenState extends State<StepsScreen> {
         ),
       );
     } else if (showEmptyState && Platform.isAndroid && provider.connectStatus == HealthConnectSdkStatus.sdkUnavailable) {
-      body = _buildEmptyState(
-        context: context,
+      body = StepsEmptyState(
         icon: Icons.download_rounded,
         title: 'Health Connect Not Installed',
         subtitle: 'Google Health Connect is required to sync steps automatically on Android. Install it from the Play Store to get started.',
@@ -292,8 +149,7 @@ class _StepsScreenState extends State<StepsScreen> {
         ],
       );
     } else if (showEmptyState && Platform.isAndroid && provider.connectStatus == HealthConnectSdkStatus.sdkUnavailableProviderUpdateRequired) {
-      body = _buildEmptyState(
-        context: context,
+      body = StepsEmptyState(
         icon: Icons.update_rounded,
         title: 'Update Required',
         subtitle: 'Health Connect needs to be updated to the latest version to sync your activity data automatically.',
@@ -306,8 +162,7 @@ class _StepsScreenState extends State<StepsScreen> {
         ],
       );
     } else if (showEmptyState && !provider.isConnectSupported) {
-      body = _buildEmptyState(
-        context: context,
+      body = StepsEmptyState(
         icon: Icons.error_outline_rounded,
         title: 'Device Not Supported',
         subtitle: 'Health Connect integration is not supported on this platform. An Android device with Google Play Services and Health Connect is required.',
@@ -320,8 +175,7 @@ class _StepsScreenState extends State<StepsScreen> {
         ],
       );
     } else if (showEmptyState && !provider.hasConnectPermissions) {
-      body = _buildEmptyState(
-        context: context,
+      body = StepsEmptyState(
         icon: Icons.settings_suggest_rounded,
         title: 'Permissions Required',
         subtitle: 'Enable Health permissions to automatically read and sync today\'s step count.',
@@ -389,24 +243,7 @@ class _StepsScreenState extends State<StepsScreen> {
               if (today != null)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: CommonCard(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    child: Row(
-                      children: [
-                        const Text('💡', style: TextStyle(fontSize: 22)),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Text(
-                            _getMotivationalMessage(today.steps),
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w500,
-                              color: theme.colorScheme.onSurface,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  child: StepsMotivationalCard(steps: today.steps),
                 ),
 
               const SizedBox(height: 24),
@@ -417,7 +254,7 @@ class _StepsScreenState extends State<StepsScreen> {
                 child: StepActionsBar(
                   isSyncing: provider.isSyncing,
                   onSync: () => provider.syncSteps(),
-                  onChangeGoal: () => _showGoalSettingsDialog(context, provider),
+                  onChangeGoal: () => showGoalSettingsDialog(context, provider),
                 ),
               ),
 
@@ -481,68 +318,8 @@ class _StepsScreenState extends State<StepsScreen> {
           ],
         ),
         centerTitle: false,
-
       ),
       body: body,
-    );
-  }
-
-  // ── Action Dialogs ──────────────────────────────────────────────────
-
-  Future<void> _showGoalSettingsDialog(BuildContext context, StepProvider provider) async {
-    final controller = TextEditingController(text: provider.currentGoal.toString());
-    final formKey = GlobalKey<FormState>();
-
-    return showDialog<void>(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-          title: const Text('Set Daily Goal'),
-          content: Form(
-            key: formKey,
-            child: TextFormField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              autofocus: true,
-              decoration: const InputDecoration(
-                labelText: 'Daily target',
-                hintText: 'e.g. 10000',
-                suffixText: 'steps',
-              ),
-              validator: (val) {
-                if (val == null || val.isEmpty) return 'Please enter goal';
-                final parsed = int.tryParse(val);
-                if (parsed == null || parsed < 1000) return 'Minimum goal is 1000';
-                return null;
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                if (formKey.currentState!.validate()) {
-                  final target = int.parse(controller.text);
-                  provider.updateGoal(target);
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Daily step goal updated successfully!'),
-                      backgroundColor: AppColors.success,
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                }
-              },
-              child: const Text('Save'),
-            ),
-          ],
-        );
-      },
     );
   }
 }
