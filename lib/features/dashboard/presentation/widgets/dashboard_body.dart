@@ -26,8 +26,6 @@ class DashboardBody extends StatefulWidget {
 }
 
 class _DashboardBodyState extends State<DashboardBody> {
-  int _selectedChartPeriod = 0; // 0 = Weekly, 1 = Monthly
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
