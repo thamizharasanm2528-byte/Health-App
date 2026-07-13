@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/services/notifications/notification_permission_service.dart';
 import '../../../core/services/notifications/notification_service.dart';
-import '../data/alarm_settings_model.dart';
 import 'alarm_provider.dart';
 import 'widgets/alarm_tile.dart';
 import 'widgets/add_edit_alarm_sheet.dart';
