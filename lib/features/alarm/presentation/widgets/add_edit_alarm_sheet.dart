@@ -229,7 +229,7 @@ class _AddEditAlarmSheetContentState extends State<_AddEditAlarmSheetContent> {
 
             // ── Snooze Duration ──
             DropdownButtonFormField<int>(
-              value: snoozeMinutes,
+              initialValue: snoozeMinutes,
               decoration: InputDecoration(
                 labelText: 'Snooze Duration',
                 prefixIcon: const Icon(Icons.snooze_rounded),
