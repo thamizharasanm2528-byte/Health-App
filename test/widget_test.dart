@@ -7,6 +7,6 @@ void main() {
     await tester.pumpWidget(const HealthCompanionApp());
 
     // Verify the splash screen renders with the app title.
-    expect(find.text('HEALTH COMPANION'), findsOneWidget);
+    expect(find.text('Health Companion'), findsOneWidget);
   });
 }
