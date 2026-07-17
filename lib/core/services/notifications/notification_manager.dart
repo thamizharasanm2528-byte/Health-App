@@ -1,5 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive_ce.dart';
 
 import '../../../features/settings/data/settings_model.dart';
 import '../../../features/reminders/data/reminder_model.dart';

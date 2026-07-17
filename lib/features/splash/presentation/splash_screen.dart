@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive_ce.dart';
 
 import '../../../core/services/app_logger.dart';
 import '../../../core/routing/route_names.dart';

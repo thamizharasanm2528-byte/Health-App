@@ -1,4 +1,4 @@
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive_ce.dart';
 
 /// Persisted configuration for the wake-up alarm.
 class AlarmSettingsModel extends HiveObject {

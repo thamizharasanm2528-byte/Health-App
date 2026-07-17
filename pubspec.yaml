@@ -42,8 +42,8 @@ dependencies:
   shared_preferences: ^2.3.5
 
   # Local NoSQL database for structured data (profile, records)
-  hive: ^2.2.3
-  hive_flutter: ^1.1.0
+  hive_ce: ^2.19.3
+  hive_ce_flutter: ^2.3.4
 
   # State management
   provider: ^6.1.2

@@ -1,4 +1,4 @@
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive_ce.dart';
 
 class ReminderModel extends HiveObject {
   final String id; // 'water', 'bedtime', or 'food_<food_id>'

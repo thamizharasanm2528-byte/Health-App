@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive_ce.dart';
 import '../data/reminder_model.dart';
 import '../domain/reminder_engine.dart';
 import '../domain/reminder_calculator.dart';

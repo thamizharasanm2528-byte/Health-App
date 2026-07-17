@@ -1,4 +1,4 @@
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive_ce.dart';
 
 import 'settings_model.dart';
 import 'settings_repository.dart';

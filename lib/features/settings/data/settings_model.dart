@@ -1,4 +1,4 @@
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive_ce.dart';
 
 /// User settings and preferences model persisted via Hive.
 class SettingsModel extends HiveObject {

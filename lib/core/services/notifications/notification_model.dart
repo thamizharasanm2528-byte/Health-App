@@ -1,4 +1,4 @@
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive_ce.dart';
 
 /// Represents metadata for a scheduled notification/reminder.
 class NotificationModel extends HiveObject {

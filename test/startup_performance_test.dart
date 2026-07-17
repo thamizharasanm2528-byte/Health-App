@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive_ce.dart';
 
 import 'package:health_companion/features/profile/data/profile_model.dart';
 import 'package:health_companion/features/water/data/water_entry.dart';

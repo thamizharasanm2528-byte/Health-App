@@ -1,4 +1,4 @@
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive_ce.dart';
 
 /// Represents a single logged sleep record.
 class SleepRecord extends HiveObject {
