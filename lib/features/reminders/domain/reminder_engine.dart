@@ -1,28 +1,119 @@
+import 'dart:typed_data';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../data/reminder_model.dart';
-import '../../alarm/domain/alarm_engine.dart';
+import '../../../core/services/notifications/notification_service.dart';
+import '../../../core/services/notifications/notification_constants.dart';
 
 class ReminderEngine {
-  final AlarmEngine _alarmEngine = AlarmEngine();
+  static const int waterBaseId = 10000;
+  static const int bedtimeBaseId = 20000;
+  static const int wakeupBaseId = 30000;
 
   /// Reschedules reminders matching settings.
   Future<void> rescheduleReminder(ReminderModel reminder) async {
+    // 1. Cancel previous scheduled items first
+    await cancelReminder(reminder.id);
+
+    if (!reminder.isEnabled || reminder.reminderTimes.isEmpty) return;
+
+    final playSound = reminder.sound;
+    final enableVibration = reminder.vibrate;
+
+    String customSound;
+    int baseId;
+
     if (reminder.id == 'water') {
-      await _alarmEngine.scheduleWaterReminder(reminder);
+      customSound = 'water_remainder';
+      baseId = waterBaseId;
     } else if (reminder.id == 'bedtime') {
-      await _alarmEngine.scheduleBedtimeReminder(reminder);
+      customSound = 'bedtime';
+      baseId = bedtimeBaseId;
     } else if (reminder.id == 'wakeup_reminder') {
-      await _alarmEngine.scheduleWakeUpReminder(reminder);
+      customSound = 'wakeupalarm';
+      baseId = wakeupBaseId;
+    } else {
+      return;
+    }
+
+    final androidDetails = AndroidNotificationDetails(
+      NotificationConstants.channelReminderId,
+      NotificationConstants.channelReminderName,
+      channelDescription: NotificationConstants.channelReminderDesc,
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: playSound,
+      sound: playSound ? RawResourceAndroidNotificationSound(customSound) : null,
+      vibrationPattern: enableVibration ? Int64List.fromList([0, 1000, 500, 1000]) : null,
+      icon: '@mipmap/ic_launcher',
+    );
+
+    final iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: playSound,
+      sound: playSound ? '$customSound.mp3' : null,
+    );
+
+    final details = NotificationDetails(android: androidDetails, iOS: iosDetails);
+    final scheduler = NotificationService.instance.scheduler;
+
+    for (final timeInMinutes in reminder.reminderTimes) {
+      final hour = timeInMinutes ~/ 60;
+      final minute = timeInMinutes % 60;
+
+      if (reminder.repeatDays.isEmpty) {
+        // Daily repeat
+        final id = baseId + timeInMinutes;
+        await scheduler.scheduleDaily(
+          id: id,
+          title: reminder.title,
+          body: reminder.body,
+          hour: hour,
+          minute: minute,
+          details: details,
+        );
+      } else {
+        // Repeat on selected weekdays
+        for (final day in reminder.repeatDays) {
+          final id = baseId + (day * 2000) + timeInMinutes;
+          await scheduler.scheduleWeekly(
+            id: id,
+            title: reminder.title,
+            body: reminder.body,
+            weekday: day,
+            hour: hour,
+            minute: minute,
+            details: details,
+          );
+        }
+      }
     }
   }
 
   /// Cancels a specific reminder.
   Future<void> cancelReminder(String id) async {
+    int baseId;
     if (id == 'water') {
-      await _alarmEngine.cancelWaterReminders();
+      baseId = waterBaseId;
     } else if (id == 'bedtime') {
-      await _alarmEngine.cancelBedtimeReminders();
+      baseId = bedtimeBaseId;
     } else if (id == 'wakeup_reminder') {
-      await _alarmEngine.cancelWakeUpReminders();
+      baseId = wakeupBaseId;
+    } else {
+      return;
+    }
+
+    final plugin = NotificationService.instance.plugin;
+    final pendingRequests = await plugin.pendingNotificationRequests();
+    for (final request in pendingRequests) {
+      final reqId = request.id;
+      if (id == 'water' && reqId >= waterBaseId && reqId < bedtimeBaseId) {
+        await plugin.cancel(reqId);
+      } else if (id == 'bedtime' && reqId >= bedtimeBaseId && reqId < wakeupBaseId) {
+        await plugin.cancel(reqId);
+      } else if (id == 'wakeup_reminder' && reqId >= wakeupBaseId && reqId < (wakeupBaseId + 10000)) {
+        await plugin.cancel(reqId);
+      }
     }
   }
 }
