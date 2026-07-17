@@ -64,11 +64,6 @@ class _AlarmAlertScreenState extends State<AlarmAlertScreen> with SingleTickerPr
         _alarmId = args;
         _isPreview = false;
       }
-      
-      // Start playing alarm ringtone if in preview mode
-      if (_isPreview) {
-        context.read<AlarmProvider>().startRingtone();
-      }
       _argsParsed = true;
     }
   }
@@ -79,12 +74,6 @@ class _AlarmAlertScreenState extends State<AlarmAlertScreen> with SingleTickerPr
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     _animationController.dispose();
     _timeTimer.cancel();
-    // Ensure sound stops if screen is popped/destroyed
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        context.read<AlarmProvider>().stopRingtone();
-      }
-    });
     super.dispose();
   }
 
