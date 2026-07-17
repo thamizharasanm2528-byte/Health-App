@@ -56,7 +56,7 @@ class _ReminderSettingsScreenState extends State<ReminderSettingsScreen> {
     final customSound = isBedtime ? 'bedtime' : 'water_remainder';
 
     // Stop/cancel any previous test notifications
-    await NotificationService.instance.plugin.cancel(9999);
+    await NotificationService.instance.plugin.cancel(id: 9999);
 
     final triggerTime = DateTime.now().add(const Duration(seconds: 5));
 

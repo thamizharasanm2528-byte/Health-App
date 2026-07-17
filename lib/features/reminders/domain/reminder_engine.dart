@@ -92,14 +92,7 @@ class ReminderEngine {
 
   /// Cancels a specific reminder.
   Future<void> cancelReminder(String id) async {
-    int baseId;
-    if (id == 'water') {
-      baseId = waterBaseId;
-    } else if (id == 'bedtime') {
-      baseId = bedtimeBaseId;
-    } else if (id == 'wakeup_reminder') {
-      baseId = wakeupBaseId;
-    } else {
+    if (id != 'water' && id != 'bedtime' && id != 'wakeup_reminder') {
       return;
     }
 
@@ -108,11 +101,11 @@ class ReminderEngine {
     for (final request in pendingRequests) {
       final reqId = request.id;
       if (id == 'water' && reqId >= waterBaseId && reqId < bedtimeBaseId) {
-        await plugin.cancel(reqId);
+        await plugin.cancel(id: reqId);
       } else if (id == 'bedtime' && reqId >= bedtimeBaseId && reqId < wakeupBaseId) {
-        await plugin.cancel(reqId);
+        await plugin.cancel(id: reqId);
       } else if (id == 'wakeup_reminder' && reqId >= wakeupBaseId && reqId < (wakeupBaseId + 10000)) {
-        await plugin.cancel(reqId);
+        await plugin.cancel(id: reqId);
       }
     }
   }
