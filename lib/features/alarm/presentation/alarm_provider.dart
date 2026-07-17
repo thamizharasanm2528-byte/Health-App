@@ -138,6 +138,21 @@ class AlarmProvider extends ChangeNotifier with WidgetsBindingObserver {
         await _engine.cancelWakeupAlarm(alarm.id);
       }
     }
+
+    // One-shot alarm limitation: since AlarmSettings schedules only a single trigger,
+    // water and bedtime reminders must be manually re-armed on app startup/resync.
+    final remindersBox = Hive.box<ReminderModel>(RemindersProvider.boxName);
+    final reminderEngine = ReminderEngine();
+
+    final waterReminder = remindersBox.get('water');
+    if (waterReminder != null && waterReminder.isEnabled) {
+      await reminderEngine.rescheduleReminder(waterReminder);
+    }
+
+    final bedtimeReminder = remindersBox.get('bedtime');
+    if (bedtimeReminder != null && bedtimeReminder.isEnabled) {
+      await reminderEngine.rescheduleReminder(bedtimeReminder);
+    }
   }
 
   // ── Getter for single next upcoming alarm (Dashboard/Compatibility) ────
