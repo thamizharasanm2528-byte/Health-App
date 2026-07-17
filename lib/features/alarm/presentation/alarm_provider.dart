@@ -66,6 +66,22 @@ class AlarmProvider extends ChangeNotifier with WidgetsBindingObserver {
     Alarm.ringing.listen((alarmSettings) async {
       if (alarmSettings.alarms.isNotEmpty) {
         final id = alarmSettings.alarms.first.id;
+
+        // One-shot alarm limitation: since AlarmSettings schedules only a single trigger,
+        // water and bedtime reminders must be manually re-armed upon ringing.
+        final isWater = id >= AlarmEngine.waterBaseId && id < AlarmEngine.bedtimeBaseId;
+        final isBedtime = id >= AlarmEngine.bedtimeBaseId && id < AlarmEngine.wakeupBaseId;
+
+        if (isWater || isBedtime) {
+          final box = Hive.box<ReminderModel>(RemindersProvider.boxName);
+          final reminderId = isWater ? 'water' : 'bedtime';
+          final reminder = box.get(reminderId);
+          if (reminder != null && reminder.isEnabled) {
+            final engine = ReminderEngine();
+            await engine.rescheduleReminder(reminder);
+          }
+        }
+
         if (id >= AlarmEngine.wakeupBaseId) {
           if (!_isAlarmScreenVisible) {
             _isAlarmScreenVisible = true;
