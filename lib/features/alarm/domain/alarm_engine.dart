@@ -136,6 +136,8 @@ class AlarmEngine {
 
   /// Reschedules Water reminder times.
   Future<void> scheduleWaterReminder(ReminderModel reminder) async {
+    // One-shot alarm limitation: AlarmSettings does not natively support repeating schedules.
+    // Reminders are scheduled as single future triggers and must be re-armed programmatically.
     // 1. Cancel previous scheduled items
     await cancelWaterReminders();
 
@@ -205,6 +207,8 @@ class AlarmEngine {
 
   /// Reschedules Bedtime reminder times.
   Future<void> scheduleBedtimeReminder(ReminderModel reminder) async {
+    // One-shot alarm limitation: AlarmSettings does not natively support repeating schedules.
+    // Reminders are scheduled as single future triggers and must be re-armed programmatically.
     // 1. Cancel previous scheduled items
     await cancelBedtimeReminders();
 
