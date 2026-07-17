@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
-import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:alarm/alarm.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
@@ -41,9 +39,6 @@ class AlarmProvider extends ChangeNotifier with WidgetsBindingObserver {
 
   final AlarmEngine _engine = AlarmEngine();
 
-  bool _isRingtonePlaying = false;
-  bool get isRingtonePlaying => _isRingtonePlaying;
-
   Timer? _vibrationTimer;
   AppLifecycleState? _lifecycleState;
   
@@ -67,20 +62,9 @@ class AlarmProvider extends ChangeNotifier with WidgetsBindingObserver {
       if (alarmSettings.alarms.isNotEmpty) {
         final id = alarmSettings.alarms.first.id;
 
-        // One-shot alarm limitation: since AlarmSettings schedules only a single trigger,
-        // water and bedtime reminders must be manually re-armed upon ringing.
-        final isWater = id >= AlarmEngine.waterBaseId && id < AlarmEngine.bedtimeBaseId;
-        final isBedtime = id >= AlarmEngine.bedtimeBaseId && id < AlarmEngine.wakeupBaseId;
-
-        if (isWater || isBedtime) {
-          final box = Hive.box<ReminderModel>(RemindersProvider.boxName);
-          final reminderId = isWater ? 'water' : 'bedtime';
-          final reminder = box.get(reminderId);
-          if (reminder != null && reminder.isEnabled) {
-            final engine = ReminderEngine();
-            await engine.rescheduleReminder(reminder);
-          }
-        }
+        // Note: Water and bedtime reminders are scheduled natively as recurring/periodic
+        // alerts via flutter_local_notifications (retaining custom sounds and persisting
+        // across reboots), so manual re-arming loops here are no longer needed.
 
         if (id >= AlarmEngine.wakeupBaseId) {
           if (!_isAlarmScreenVisible) {
@@ -139,20 +123,9 @@ class AlarmProvider extends ChangeNotifier with WidgetsBindingObserver {
       }
     }
 
-    // One-shot alarm limitation: since AlarmSettings schedules only a single trigger,
-    // water and bedtime reminders must be manually re-armed on app startup/resync.
-    final remindersBox = Hive.box<ReminderModel>(RemindersProvider.boxName);
-    final reminderEngine = ReminderEngine();
-
-    final waterReminder = remindersBox.get('water');
-    if (waterReminder != null && waterReminder.isEnabled) {
-      await reminderEngine.rescheduleReminder(waterReminder);
-    }
-
-    final bedtimeReminder = remindersBox.get('bedtime');
-    if (bedtimeReminder != null && bedtimeReminder.isEnabled) {
-      await reminderEngine.rescheduleReminder(bedtimeReminder);
-    }
+    // Note: Water and bedtime reminders are scheduled natively as recurring/periodic
+    // alerts via flutter_local_notifications, which persist across app launches and reboots.
+    // Therefore, manual re-scheduling logic here is no longer required.
   }
 
   // ── Getter for single next upcoming alarm (Dashboard/Compatibility) ────
@@ -444,50 +417,9 @@ class AlarmProvider extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  // ── Ringtone Playback Control (For previewing) ─────────────────────────
-
-  void startRingtone() {
-    if (_isRingtonePlaying) return;
-    _isRingtonePlaying = true;
-
-    // Use default settings logic or next alarm preferences
-    final alarm = alarmSettings;
-    final playSound = alarm?.sound ?? true;
-    final enableVibrate = alarm?.vibrate ?? true;
-
-    if (playSound) {
-      FlutterRingtonePlayer().play(
-        android: AndroidSounds.alarm,
-        ios: IosSounds.alarm,
-        looping: true,
-        volume: 1.0,
-        asAlarm: true,
-      );
-    }
-
-    if (enableVibrate) {
-      _vibrationTimer?.cancel();
-      _vibrationTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
-        HapticFeedback.vibrate();
-      });
-    }
-
-    notifyListeners();
-  }
-
-  void stopRingtone() {
-    if (!_isRingtonePlaying) return;
-    _isRingtonePlaying = false;
-    FlutterRingtonePlayer().stop();
-    _vibrationTimer?.cancel();
-    _vibrationTimer = null;
-    notifyListeners();
-  }
-
   // ── Alarm Actions ──────────────────────────────────────────────────────
 
   Future<void> snoozeAlarm(int alarmId) async {
-    stopRingtone();
     // Locate the alarm
     final alarm = _alarms.firstWhere((a) => a.id == alarmId, orElse: () => _alarms.first);
     await _engine.snoozeAlarm(alarm);
@@ -495,7 +427,6 @@ class AlarmProvider extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   Future<void> dismissAlarm(int alarmId, BuildContext context) async {
-    stopRingtone();
     // Retrieve provider before async gap
     final sleepProv = Provider.of<SleepProvider>(context, listen: false);
     
