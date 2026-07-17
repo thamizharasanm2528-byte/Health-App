@@ -214,7 +214,6 @@ class _AlarmAlertScreenState extends State<AlarmAlertScreen> with SingleTickerPr
                         onPressed: () async {
                           final nav = Navigator.of(context);
                           if (_isPreview) {
-                            alarmProv.stopRingtone();
                             nav.pop();
                           } else {
                             await alarmProv.snoozeAlarm(_alarmId);
@@ -250,7 +249,6 @@ class _AlarmAlertScreenState extends State<AlarmAlertScreen> with SingleTickerPr
                         onPressed: () async {
                           final nav = Navigator.of(context);
                           if (_isPreview) {
-                            alarmProv.stopRingtone();
                             nav.pop();
                           } else {
                             await alarmProv.dismissAlarm(_alarmId, context);
