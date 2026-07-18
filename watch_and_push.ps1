@@ -3,7 +3,6 @@
 
 $repoPath = "d:\health_app\health_companion"
 Set-Location $repoPath
-
 Write-Host "Starting Git Auto-Push Watcher in $repoPath..."
 
 while ($true) {
@@ -11,21 +10,17 @@ while ($true) {
         if (Test-Path "$repoPath\.git") {
             $status = git status --porcelain
             if ($status) {
-                $statusMsg = "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Changes detected. Syncing..."
-                Add-Content -Path "$repoPath\watch_and_push.log" -Value $statusMsg
-                
+                Write-Host "Changes detected at $(Get-Date -Format 'HH:mm:ss'). Syncing..."
                 git add -A
                 $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
                 git commit -m "Auto-sync changes: $timestamp"
-                git push origin main
-                
-                $successMsg = "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Successfully pushed changes to GitHub."
-                Add-Content -Path "$repoPath\watch_and_push.log" -Value $successMsg
+                git push origin -u main
+                Write-Host "Successfully pushed changes to GitHub."
             }
         }
-    } catch {
-        $errMsg = "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Failed to auto-push: $_"
-        Add-Content -Path "$repoPath\watch_and_push.log" -Value $errMsg
     }
-    Start-Sleep -Seconds 30
+    catch {
+        Write-Warning "Failed to auto-push changes: $_"
+    }
+    Start-Sleep -Seconds 60
 }
