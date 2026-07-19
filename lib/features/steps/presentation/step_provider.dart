@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:health/health.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../profile/data/profile_local_data_source.dart';
+import '../../../core/services/app_logger.dart';
 import '../data/health_service.dart';
 import '../data/step_entry.dart';
 import '../domain/step_repository.dart';
@@ -30,9 +30,7 @@ class StepProvider extends ChangeNotifier with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      if (kDebugMode) {
-        print('StepProvider: App returned to foreground. Syncing steps.');
-      }
+      AppLogger.info('StepProvider: App returned to foreground. Syncing steps.');
       syncSteps();
     }
   }

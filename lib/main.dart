@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'core/services/app_logger.dart';
 import 'core/services/app_refresh_coordinator.dart';
 import 'core/routing/app_router.dart';
 import 'core/routing/route_names.dart';
@@ -217,9 +218,7 @@ class _HealthCompanionAppState extends State<HealthCompanionApp> {
       // Setup Global Error Boundaries & Releases Protection
       FlutterError.onError = (details) {
         FlutterError.presentError(details);
-        if (kDebugMode) {
-          print('Flutter UI Frame Error: ${details.exceptionAsString()}');
-        }
+        AppLogger.error('FlutterError.onError', details.exceptionAsString());
       };
 
       // Phase 1: Parallelize plugin initialization
@@ -228,9 +227,7 @@ class _HealthCompanionAppState extends State<HealthCompanionApp> {
           try {
             await Alarm.init();
           } catch (e) {
-            if (kDebugMode) {
-              print('Warning: Alarm.init() failed: $e');
-            }
+            AppLogger.error('Alarm.init', e);
           }
         })(),
         Hive.initFlutter(),
@@ -269,9 +266,7 @@ class _HealthCompanionAppState extends State<HealthCompanionApp> {
       try {
         await NotificationService.instance.init();
       } catch (e) {
-        if (kDebugMode) {
-          print('Warning: NotificationService.init() failed: $e');
-        }
+        AppLogger.error('NotificationService.init', e);
       }
 
       if (mounted) {

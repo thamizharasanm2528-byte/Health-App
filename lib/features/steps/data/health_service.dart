@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:health/health.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../../core/services/app_logger.dart';
+
 /// Service interfacing with Apple HealthKit or Android Health Connect.
 class HealthService {
   final Health _health = Health();
@@ -18,9 +20,7 @@ class HealthService {
         await _health.configure();
         _isConfigured = true;
       } catch (e) {
-        if (kDebugMode) {
-          print('HealthService: Configuration failed: $e');
-        }
+        AppLogger.error('HealthService.configure', e);
       }
     }
   }
@@ -42,14 +42,10 @@ class HealthService {
     try {
       await _ensureConfigured();
       final status = await _health.getHealthConnectSdkStatus();
-      if (kDebugMode) {
-        print('HealthService: Health Connect SDK status = $status');
-      }
+      AppLogger.info('HealthService: Health Connect SDK status = $status');
       return status;
     } catch (e) {
-      if (kDebugMode) {
-        print('HealthService: Failed to get Health Connect status: $e');
-      }
+      AppLogger.error('HealthService.getHealthConnectStatus', e);
       return null;
     }
   }
@@ -66,22 +62,16 @@ class HealthService {
       if (Platform.isAndroid) {
         final activityRecognitionGranted = await Permission.activityRecognition.isGranted;
         if (!activityRecognitionGranted) {
-          if (kDebugMode) {
-            print('HealthService: Activity Recognition permission is NOT granted.');
-          }
+          AppLogger.error('HealthService.hasPermissions', 'Activity Recognition permission is NOT granted.');
           return false;
         }
       }
 
       final has = await _health.hasPermissions(_types, permissions: _permissions);
-      if (kDebugMode) {
-        print('HealthService: Health SDK hasPermissions = $has');
-      }
+      AppLogger.info('HealthService: Health SDK hasPermissions = $has');
       return has ?? false;
     } catch (e) {
-      if (kDebugMode) {
-        print('HealthService: Failed to check permissions: $e');
-      }
+      AppLogger.error('HealthService.hasPermissions', e);
       return false;
     }
   }
@@ -98,9 +88,7 @@ class HealthService {
       if (Platform.isAndroid) {
         final status = await Permission.activityRecognition.request();
         if (status != PermissionStatus.granted) {
-          if (kDebugMode) {
-            print('HealthService: Activity Recognition permission denied: $status');
-          }
+          AppLogger.error('HealthService.requestPermissions', 'Activity Recognition permission denied: $status');
           return false;
         }
       }
@@ -110,14 +98,10 @@ class HealthService {
         _types,
         permissions: _permissions,
       );
-      if (kDebugMode) {
-        print('HealthService: requestAuthorization result = $granted');
-      }
+      AppLogger.info('HealthService: requestAuthorization result = $granted');
       return granted;
     } catch (e) {
-      if (kDebugMode) {
-        print('HealthService: Failed to request authorization: $e');
-      }
+      AppLogger.error('HealthService.requestAuthorization', e);
       return false;
     }
   }
@@ -132,19 +116,13 @@ class HealthService {
 
       await _ensureConfigured();
 
-      if (kDebugMode) {
-        print('HealthService: Fetching steps from ${start.toIso8601String()} to ${end.toIso8601String()}');
-      }
+      AppLogger.info('HealthService: Fetching steps from ${start.toIso8601String()} to ${end.toIso8601String()}');
 
       final steps = await _health.getTotalStepsInInterval(start, end);
-      if (kDebugMode) {
-        print('HealthService: Fetched steps result = $steps');
-      }
+      AppLogger.info('HealthService: Fetched steps result = $steps');
       return steps;
     } catch (e) {
-      if (kDebugMode) {
-        print('HealthService: Failed to fetch steps for interval: $e');
-      }
+      AppLogger.error('HealthService.fetchSteps', e);
       return null;
     }
   }

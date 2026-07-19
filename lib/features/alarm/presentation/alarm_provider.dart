@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_ce/hive_ce.dart';
 import 'package:alarm/alarm.dart';
@@ -437,9 +436,7 @@ class AlarmProvider extends ChangeNotifier with WidgetsBindingObserver {
     try {
       await sleepProv.logSleepFromAlarmDismissal();
     } catch (e) {
-      if (kDebugMode) {
-        print('Error saving sleep on dismissal: $e');
-      }
+      AppLogger.error('AlarmProvider.dismissAlarm', e);
     }
     
     notifyListeners();
