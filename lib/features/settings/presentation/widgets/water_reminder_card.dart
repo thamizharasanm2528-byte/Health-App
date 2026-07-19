@@ -67,6 +67,9 @@ class WaterReminderCard extends StatelessWidget {
       for (var t = startTotal; t <= endTotal; t += typeVal) {
         times.add(t);
       }
+      if (times.isEmpty || times.last != endTotal) {
+        times.add(endTotal);
+      }
       return times;
     }
 

@@ -36,6 +36,12 @@ class NotificationService {
 
     // ── Init timezone database ──
     tz.initializeTimeZones();
+    try {
+      final String timeZoneName = await FlutterTimezone.getLocalTimezone();
+      tz_db.setLocalLocation(tz_db.getLocation(timeZoneName));
+    } catch (e, st) {
+      AppLogger.error('NotificationService.init (timezone)', e, st);
+    }
 
     // ── Setup services ──
     permissionService = NotificationPermissionService();
@@ -116,7 +122,9 @@ class NotificationService {
         NotificationConstants.channelReminderId,
         NotificationConstants.channelReminderName,
         description: NotificationConstants.channelReminderDesc,
-        importance: Importance.defaultImportance,
+        importance: Importance.max,
+        playSound: true,
+        enableVibration: true,
       ),
       const AndroidNotificationChannel(
         NotificationConstants.channelAchievementsId,

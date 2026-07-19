@@ -21,7 +21,7 @@ abstract final class NotificationConstants {
   static const String channelAlarmName = 'Wake-up Alarm';
   static const String channelAlarmDesc = 'Daily wake-up alarms';
 
-  static const String channelReminderId = 'reminders_channel';
+  static const String channelReminderId = 'reminders_channel_v2';
   static const String channelReminderName = 'Reminders';
   static const String channelReminderDesc = 'Hydration, Sleep, and Healthy Eating alerts';
 
