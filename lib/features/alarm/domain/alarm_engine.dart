@@ -50,7 +50,7 @@ class AlarmEngine {
         loopAudio: true,
         vibrate: alarm.vibrate,
         androidFullScreenIntent: true,
-        volumeSettings: const VolumeSettings.fixed(volume: 0.8),
+        volumeSettings: const VolumeSettings.fixed(),
         notificationSettings: NotificationSettings(
           title: title,
           body: body,
@@ -69,7 +69,7 @@ class AlarmEngine {
           loopAudio: true,
           vibrate: alarm.vibrate,
           androidFullScreenIntent: true,
-          volumeSettings: const VolumeSettings.fixed(volume: 0.8),
+          volumeSettings: const VolumeSettings.fixed(),
           notificationSettings: NotificationSettings(
             title: title,
             body: body,
@@ -109,7 +109,7 @@ class AlarmEngine {
       loopAudio: true,
       vibrate: alarm.vibrate,
       androidFullScreenIntent: true,
-      volumeSettings: const VolumeSettings.fixed(volume: 0.8),
+      volumeSettings: const VolumeSettings.fixed(),
       notificationSettings: const NotificationSettings(
         title: '⏰ Snoozed: Wake Up!',
         body: 'Time to start your healthy routine.',
@@ -140,7 +140,7 @@ class AlarmEngine {
       assetAudioPath: 'assets/wakeupalarm.mp3',
       loopAudio: true,
       vibrate: settings.vibrate,
-      volumeSettings: const VolumeSettings.fixed(volume: 0.8),
+      volumeSettings: const VolumeSettings.fixed(),
       notificationSettings: const NotificationSettings(
         title: '⏰ Test Alarm Ringing!',
         body: 'Your Wake-up Alarm background engine works successfully.',
