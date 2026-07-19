@@ -48,6 +48,25 @@ subprojects {
     }
 }
 
+subprojects {
+    tasks.withType(JavaCompile::class.java).configureEach {
+        sourceCompatibility = "11"
+        targetCompatibility = "11"
+    }
+    
+    tasks.configureEach {
+        if (name.startsWith("compile") && name.endsWith("Kotlin")) {
+            try {
+                val kotlinOptions = property("kotlinOptions")
+                if (kotlinOptions != null) {
+                    val setJvmTarget = kotlinOptions::class.java.getMethod("setJvmTarget", String::class.java)
+                    setJvmTarget.invoke(kotlinOptions, "11")
+                }
+            } catch (e: Exception) {}
+        }
+    }
+}
+
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
