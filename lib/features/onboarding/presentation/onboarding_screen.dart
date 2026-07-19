@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/routing/route_names.dart';
 import '../../../core/services/onboarding_storage_service.dart';
 import '../../../core/services/notifications/notification_service.dart';
+import '../../../core/services/app_logger.dart';
 import '../../../shared/widgets/page_indicator.dart';
 import 'onboarding_content.dart';
 import 'widgets/onboarding_page_widget.dart';
@@ -85,7 +86,13 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     try {
       await NotificationService.instance.permissionService.requestNotificationPermission();
       await NotificationService.instance.permissionService.requestExactAlarmPermission();
-    } catch (_) {}
+    } catch (e, st) {
+      AppLogger.error(
+        'OnboardingScreen._completeOnboarding: permission request failed',
+        e,
+        st,
+      );
+    }
     if (!mounted) return;
     Navigator.of(context).pushReplacementNamed(RouteNames.profileSetup);
   }
