@@ -49,18 +49,18 @@ subprojects {
 }
 
 subprojects {
-    tasks.withType(JavaCompile::class.java).configureEach {
-        sourceCompatibility = "11"
-        targetCompatibility = "11"
-    }
-    
     tasks.configureEach {
         if (name.startsWith("compile") && name.endsWith("Kotlin")) {
             try {
-                val kotlinOptions = property("kotlinOptions")
-                if (kotlinOptions != null) {
-                    val setJvmTarget = kotlinOptions::class.java.getMethod("setJvmTarget", String::class.java)
-                    setJvmTarget.invoke(kotlinOptions, "11")
+                val javaCompileTaskName = name.replace("Kotlin", "JavaWithJavac")
+                val javaCompileTask = project.tasks.findByName(javaCompileTaskName) as? JavaCompile
+                if (javaCompileTask != null) {
+                    val targetCompat = javaCompileTask.targetCompatibility.toString()
+                    val kotlinOptions = property("kotlinOptions")
+                    if (kotlinOptions != null) {
+                        val setJvmTarget = kotlinOptions::class.java.getMethod("setJvmTarget", String::class.java)
+                        setJvmTarget.invoke(kotlinOptions, targetCompat)
+                    }
                 }
             } catch (e: Exception) {}
         }
