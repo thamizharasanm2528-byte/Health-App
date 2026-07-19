@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../data/alarm_settings_model.dart';
 import '../alarm_provider.dart';
+import '../../../../core/services/notifications/notification_service.dart';
+import '../../../../core/services/notifications/notification_permission_service.dart';
 
 Future<void> showAddEditAlarmSheet(
   BuildContext context,
@@ -307,17 +309,35 @@ class _AddEditAlarmSheetContentState extends State<_AddEditAlarmSheetContent> {
                           );
                           await widget.alarmProv.updateAlarm(updated);
                         } else {
-                          final newAlarm = AlarmSettingsModel(
-                            isEnabled: true,
-                            hour: selectedHour,
-                            minute: selectedMinute,
-                            repeatDays: tempRepeatDays,
-                            sound: sound,
-                            vibrate: vibrate,
-                            snoozeDurationMinutes: snoozeMinutes,
-                            label: labelController.text.trim(),
-                          );
-                          await widget.alarmProv.addAlarm(newAlarm);
+                          final status = await widget.alarmProv.addAlarm(newAlarm);
+                          if (status == AppPermissionStatus.permanentlyDenied && context.mounted) {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Permission Required'),
+                                content: const Text(
+                                  'Exact Alarm and Notification permissions are required to schedule background alarms. '
+                                  'Please grant these permissions in your system settings.',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                      NotificationService.instance.permissionService.openSettings();
+                                    },
+                                    child: const Text('Open Settings'),
+                                  ),
+                                ],
+                              ),
+                            );
+                            return;
+                          } else if (status == AppPermissionStatus.denied) {
+                            return;
+                          }
                         }
                         // Optionally sync bedtime if preferred
                         await widget.alarmProv.syncBedtimeWithWakeTime(selectedHour, selectedMinute);

@@ -228,10 +228,28 @@ class AlarmProvider extends ChangeNotifier with WidgetsBindingObserver {
     return '$formattedTime (${formatRepeatDaysList(settings.repeatDays)})';
   }
 
+  Future<AppPermissionStatus> _ensureAlarmPermissions() async {
+    final notifStatus = await NotificationService.instance.permissionService.requestNotificationPermission();
+    if (notifStatus != AppPermissionStatus.granted) {
+      return notifStatus;
+    }
+
+    final exactStatus = await NotificationService.instance.permissionService.requestExactAlarmPermission();
+    if (exactStatus != AppPermissionStatus.granted) {
+      return exactStatus;
+    }
+    return AppPermissionStatus.granted;
+  }
+
   // ── CRUD Methods ──
 
-  Future<void> addAlarm(AlarmSettingsModel alarm) async {
+  Future<AppPermissionStatus> addAlarm(AlarmSettingsModel alarm) async {
     if (alarm.isEnabled) {
+      final status = await _ensureAlarmPermissions();
+      if (status != AppPermissionStatus.granted) {
+        return status;
+      }
+
       // Clear primary from all other alarms
       for (final a in _alarms) {
         if (a.isPrimaryWakeup) {
@@ -249,6 +267,7 @@ class AlarmProvider extends ChangeNotifier with WidgetsBindingObserver {
       await _engine.scheduleWakeupAlarm(alarm);
     }
     notifyListeners();
+    return AppPermissionStatus.granted;
   }
 
   Future<void> updateAlarm(AlarmSettingsModel alarm) async {
@@ -320,20 +339,9 @@ class AlarmProvider extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<AppPermissionStatus> toggleAlarm(int alarmId, bool enabled) async {
     if (enabled) {
-      final notifStatus = await NotificationService.instance.permissionService.requestNotificationPermission();
-      if (notifStatus == AppPermissionStatus.permanentlyDenied) {
-        return AppPermissionStatus.permanentlyDenied;
-      }
-      if (notifStatus == AppPermissionStatus.denied) {
-        return AppPermissionStatus.denied;
-      }
-
-      final exactStatus = await NotificationService.instance.permissionService.requestExactAlarmPermission();
-      if (exactStatus == AppPermissionStatus.permanentlyDenied) {
-        return AppPermissionStatus.permanentlyDenied;
-      }
-      if (exactStatus == AppPermissionStatus.denied) {
-        return AppPermissionStatus.denied;
+      final status = await _ensureAlarmPermissions();
+      if (status != AppPermissionStatus.granted) {
+        return status;
       }
     }
 
