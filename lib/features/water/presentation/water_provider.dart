@@ -7,6 +7,7 @@ import '../../../core/services/app_logger.dart';
 import '../../reminders/data/reminder_model.dart';
 
 import '../../../core/services/notifications/notification_service.dart';
+import '../../../core/services/notifications/notification_permission_service.dart';
 import '../../../core/services/notifications/notification_manager.dart';
 import '../../../main.dart' show sharedPrefs;
 import '../../profile/data/profile_local_data_source.dart';
@@ -291,7 +292,7 @@ class WaterProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> setRemindersEnabled(bool enabled) async {
+  Future<AppPermissionStatus> setRemindersEnabled(bool enabled) async {
     final previousValue = _remindersEnabled;
     _remindersEnabled = enabled;
     notifyListeners(); // Instant UI update
@@ -302,11 +303,31 @@ class WaterProvider extends ChangeNotifier {
       final reminder = box.get('water');
       if (reminder != null) {
         reminder.isEnabled = enabled;
+        
+        if (enabled) {
+          final notifStatus = await NotificationService.instance.permissionService.requestNotificationPermission();
+          if (notifStatus != AppPermissionStatus.granted) {
+            _remindersEnabled = previousValue;
+            reminder.isEnabled = previousValue;
+            await box.put('water', reminder);
+            notifyListeners();
+            return notifStatus;
+          }
+
+          final exactStatus = await NotificationService.instance.permissionService.requestExactAlarmPermission();
+          if (exactStatus != AppPermissionStatus.granted) {
+            _remindersEnabled = previousValue;
+            reminder.isEnabled = previousValue;
+            await box.put('water', reminder);
+            notifyListeners();
+            return exactStatus;
+          }
+        }
+
         await box.put('water', reminder);
         
         final manager = NotificationManager();
         if (enabled) {
-          await NotificationService.instance.permissionService.requestPermission();
           await manager.scheduleWaterReminder(
             intervalMinutes: _reminderIntervalMinutes,
             startHour: _reminderStartHour,
@@ -316,11 +337,13 @@ class WaterProvider extends ChangeNotifier {
           await manager.cancelWaterReminders();
         }
       }
+      return AppPermissionStatus.granted;
     } catch (e, st) {
       _remindersEnabled = previousValue;
       _lastError = 'Failed to update reminder status: $e';
       AppLogger.error('WaterProvider.setRemindersEnabled', e, st);
       notifyListeners();
+      return AppPermissionStatus.denied;
     }
   }
 

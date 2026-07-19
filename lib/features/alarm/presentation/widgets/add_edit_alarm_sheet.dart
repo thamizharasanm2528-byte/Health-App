@@ -309,6 +309,16 @@ class _AddEditAlarmSheetContentState extends State<_AddEditAlarmSheetContent> {
                           );
                           await widget.alarmProv.updateAlarm(updated);
                         } else {
+                          final newAlarm = AlarmSettingsModel(
+                            isEnabled: true,
+                            hour: selectedHour,
+                            minute: selectedMinute,
+                            repeatDays: tempRepeatDays,
+                            sound: sound,
+                            vibrate: vibrate,
+                            snoozeDurationMinutes: snoozeMinutes,
+                            label: labelController.text.trim(),
+                          );
                           final status = await widget.alarmProv.addAlarm(newAlarm);
                           if (status == AppPermissionStatus.permanentlyDenied && context.mounted) {
                             showDialog(

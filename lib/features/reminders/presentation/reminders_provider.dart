@@ -4,6 +4,8 @@ import 'package:hive_ce/hive_ce.dart';
 import '../data/reminder_model.dart';
 import '../domain/reminder_engine.dart';
 import '../domain/reminder_calculator.dart';
+import '../../../core/services/notifications/notification_service.dart';
+import '../../../core/services/notifications/notification_permission_service.dart';
 
 class RemindersProvider extends ChangeNotifier {
   static const String boxName = 'reminders_box';
@@ -60,11 +62,31 @@ class RemindersProvider extends ChangeNotifier {
     return existing;
   }
 
-  /// Saves or updates a reminder.
-  Future<void> saveReminder(ReminderModel reminder) async {
+  Future<AppPermissionStatus> saveReminder(ReminderModel reminder) async {
+    if (reminder.isEnabled) {
+      final notifStatus = await NotificationService.instance.permissionService.requestNotificationPermission();
+      if (notifStatus != AppPermissionStatus.granted) {
+        reminder.isEnabled = false;
+        _loadReminders();
+        return notifStatus;
+      }
+
+      final exactStatus = await NotificationService.instance.permissionService.requestExactAlarmPermission();
+      if (exactStatus != AppPermissionStatus.granted) {
+        reminder.isEnabled = false;
+        _loadReminders();
+        return exactStatus;
+      }
+    }
+
     await _box.put(reminder.id, reminder);
     _loadReminders();
-    await _engine.rescheduleReminder(reminder);
+    if (reminder.isEnabled) {
+      await _engine.rescheduleReminder(reminder);
+    } else {
+      await _engine.cancelReminder(reminder.id);
+    }
+    return AppPermissionStatus.granted;
   }
 
   /// Reschedules all enabled reminders.
