@@ -96,9 +96,34 @@ class WaterReminderCard extends StatelessWidget {
                 ),
                 Switch.adaptive(
                   value: reminder.isEnabled,
-                  onChanged: (val) {
+                  onChanged: (val) async {
                     reminder.isEnabled = val;
-                    remindersProv.saveReminder(reminder);
+                    final status = await remindersProv.saveReminder(reminder);
+                    if (status == AppPermissionStatus.permanentlyDenied && context.mounted) {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Permission Required'),
+                          content: const Text(
+                            'Exact Alarm and Notification permissions are required to schedule background reminders. '
+                            'Please grant these permissions in your system settings.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                NotificationService.instance.permissionService.openSettings();
+                              },
+                              child: const Text('Open Settings'),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
                   },
                 ),
               ],

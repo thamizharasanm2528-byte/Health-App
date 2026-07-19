@@ -18,24 +18,41 @@ class SettingsScreen extends StatefulWidget {
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends State<SettingsScreen> with WidgetsBindingObserver {
   bool _notifPermission = false;
   bool _healthPermission = false;
+  bool _hasAllNotifPermissions = true;
   final _healthService = HealthService();
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _checkPermissions();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkPermissions();
+    }
   }
 
   Future<void> _checkPermissions() async {
     final notif = await NotificationService.instance.permissionService.getStatus();
     final health = await _healthService.hasPermissions();
+    final allNotif = await NotificationService.instance.permissionService.hasAllPermissions();
     if (mounted) {
       setState(() {
         _notifPermission = notif == NotificationPermissionStatus.granted;
         _healthPermission = health;
+        _hasAllNotifPermissions = allNotif;
       });
     }
   }
@@ -67,6 +84,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
+          if (!_hasAllNotifPermissions)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Card(
+                color: theme.colorScheme.errorContainer.withValues(alpha: 0.15),
+                child: ListTile(
+                  leading: const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                  title: const Text('Permissions Missing'),
+                  subtitle: const Text('Notification and Alarm permissions are needed for reminders to fire on time.'),
+                  trailing: TextButton(
+                    onPressed: () async {
+                      await NotificationService.instance.permissionService.openSettings();
+                    },
+                    child: const Text('Fix'),
+                  ),
+                ),
+              ),
+            ),
 
 
           // ── ALARMS & REMINDERS ──

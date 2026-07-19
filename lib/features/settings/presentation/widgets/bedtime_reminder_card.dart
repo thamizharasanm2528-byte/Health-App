@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../core/services/notifications/notification_service.dart';
+import '../../../../core/services/notifications/notification_permission_service.dart';
 import '../../../reminders/presentation/reminders_provider.dart';
 import '../../../reminders/data/reminder_model.dart';
 import 'time_picker_row.dart';
@@ -56,9 +58,34 @@ class BedtimeReminderCard extends StatelessWidget {
                 ),
                 Switch.adaptive(
                   value: reminder.isEnabled,
-                  onChanged: (val) {
+                  onChanged: (val) async {
                     reminder.isEnabled = val;
-                    remindersProv.saveReminder(reminder);
+                    final status = await remindersProv.saveReminder(reminder);
+                    if (status == AppPermissionStatus.permanentlyDenied && context.mounted) {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Permission Required'),
+                          content: const Text(
+                            'Exact Alarm and Notification permissions are required to schedule background reminders. '
+                            'Please grant these permissions in your system settings.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                NotificationService.instance.permissionService.openSettings();
+                              },
+                              child: const Text('Open Settings'),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
                   },
                 ),
               ],
