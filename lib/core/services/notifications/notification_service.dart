@@ -37,7 +37,8 @@ class NotificationService {
     // ── Init timezone database ──
     tz.initializeTimeZones();
     try {
-      final String timeZoneName = await FlutterTimezone.getLocalTimezone();
+      final timezoneInfo = await FlutterTimezone.getLocalTimezone();
+      final String timeZoneName = timezoneInfo.identifier;
       tz_db.setLocalLocation(tz_db.getLocation(timeZoneName));
     } catch (e, st) {
       AppLogger.error('NotificationService.init (timezone)', e, st);
